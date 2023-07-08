@@ -6,7 +6,6 @@ from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.video.fx.all import crop
 import toml
 
-
 def process_segment(video_path, idx, desc, segment):
 	# Convert start and end times to seconds
 	h, m, s = map(int, segment['start_time'].split(':'))
@@ -21,9 +20,10 @@ def process_segment(video_path, idx, desc, segment):
 	# Trim the video
 	clip = clip.subclip(start_time, end_time)
 
-	# Crop the video
-	rect = segment['clip_rect']
-	clip = clip.fx(crop, x1=rect['x'], y1=rect['y'], x2=rect['end_x'], y2=rect['end_y'])
+	# Crop the video if clip_rect is specified
+	if 'clip_rect' in segment:
+		rect = segment['clip_rect']
+		clip = clip.fx(crop, x1=rect['x'], y1=rect['y'], x2=rect['end_x'], y2=rect['end_y'])
 
 	# Prepare the output filename
 	base_name = os.path.splitext(video_path)[0]  # get filename without extension
@@ -31,7 +31,6 @@ def process_segment(video_path, idx, desc, segment):
 
 	# Save the segment as a separate file
 	clip.write_videofile(output_filename)
-
 
 def process_video_toml(toml_file):
 	# Load the TOML file
@@ -45,7 +44,6 @@ def process_video_toml(toml_file):
 
 	for idx, segment in enumerate(video_data['segments']):
 		process_segment(video_data['title'], idx, segment['desc'], segment)
-
 
 if __name__ == "__main__":
 	# Check if the script was called with an argument
