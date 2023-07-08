@@ -39,6 +39,8 @@ def process_video_toml(toml_file):
 	# Extract video details
 	video_data = data['video'][0]
 
+	print(f"\n\n======= Processing video: {os.path.basename(video_data['title'])} =======\n")
+
 	for idx, segment in enumerate(video_data['segments']):
 		process_segment(video_data['title'], idx, segment)
 
