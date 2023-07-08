@@ -1,0 +1,15 @@
+[[video]]
+title = "output_green.mp4"
+
+[[video.segments]]
+start_time = "00:00:30"
+end_time = "00:00:35"
+clip_rect = { x = 50, y = 50, end_x = 430, end_y = 220 }
+tags = ["tag1", "tag2"]
+
+[[video.segments]]
+start_time = "00:01:00"
+end_time = "00:01:10"
+clip_rect = { x = 100, y = 50, end_x = 380, end_y = 220 }
+tags = ["tag3"]
+
