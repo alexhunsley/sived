@@ -29,7 +29,8 @@ def process_segment(video_path, idx, segment):
 	output_filename = f"{base_name}__seg{idx:04d}.mp4"
 
 	# Save the segment as a separate file
-	clip.write_videofile(output_filename)
+	# clip.write_videofile(output_filename)
+	clip.write_videofile(output_filename, codec='libx264') #, bitrate='100k') #, audio_codec='aac', audio_bitrate='160k')
 
 def process_video_toml(toml_file):
 	# Load the TOML file
