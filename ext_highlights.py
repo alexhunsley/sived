@@ -1,12 +1,12 @@
 import glob
 import sys
+import os
 from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.video.fx.all import crop
 import toml
 
-
-def process_segment(video_title, idx, segment):
+def process_segment(video_path, idx, segment):
 	# Convert start and end times to seconds
 	h, m, s = map(int, segment['start_time'].split(':'))
 	start_time = h*3600 + m*60 + s
@@ -15,7 +15,7 @@ def process_segment(video_title, idx, segment):
 	end_time = h*3600 + m*60 + s
 
 	# Load the video
-	clip = VideoFileClip(video_title)
+	clip = VideoFileClip(video_path)
 
 	# Trim the video
 	clip = clip.subclip(start_time, end_time)
@@ -24,8 +24,12 @@ def process_segment(video_title, idx, segment):
 	rect = segment['clip_rect']
 	clip = clip.fx(crop, x1=rect['x'], y1=rect['y'], x2=rect['end_x'], y2=rect['end_y'])
 
+	# Prepare the output filename
+	base_name = os.path.splitext(video_path)[0]  # get filename without extension
+	output_filename = f"{base_name}__seg{idx:04d}.mp4"
+
 	# Save the segment as a separate file
-	clip.write_videofile(f"output_{idx}.mp4")
+	clip.write_videofile(output_filename)
 
 def process_video_toml(toml_file):
 	# Load the TOML file
