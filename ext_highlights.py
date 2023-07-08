@@ -6,7 +6,18 @@ from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.video.fx.all import crop
 import toml
 
+force_overwrite_existing = False
+
 def process_segment(video_path, idx, desc, segment):
+	# Prepare the output filename
+	base_name = os.path.splitext(video_path)[0]  # get filename without extension
+	output_filename = f"{base_name}__seg{idx:04d}__{desc}.mp4"
+
+	# Check if the file already exists
+	if os.path.isfile(output_filename) and not force_overwrite_existing:
+		print(f"File {output_filename} already exists, skipping...")
+		return
+
 	# Convert start and end times to seconds
 	h, m, s = map(int, segment['start_time'].split(':'))
 	start_time = h*3600 + m*60 + s
@@ -24,10 +35,6 @@ def process_segment(video_path, idx, desc, segment):
 	if 'clip_rect' in segment:
 		rect = segment['clip_rect']
 		clip = clip.fx(crop, x1=rect['x'], y1=rect['y'], x2=rect['end_x'], y2=rect['end_y'])
-
-	# Prepare the output filename
-	base_name = os.path.splitext(video_path)[0]  # get filename without extension
-	output_filename = f"{base_name}__seg{idx:04d}__{desc}.mp4"
 
 	# Save the segment as a separate file
 	clip.write_videofile(output_filename)
