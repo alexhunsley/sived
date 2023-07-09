@@ -8,8 +8,11 @@ from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 from moviepy.video.fx.all import crop, resize
+from moviepy.editor import concatenate_videoclips
 import toml
 
+
+make_concatenation_video = True
 
 default_watermark_position = ("left", "top")
 force_overwrite_existing = False
@@ -101,10 +104,10 @@ def time_to_seconds(time_string):
     return total_seconds
 
 
-def process_segment(video_path, idx, desc, segment, video_data):
+def process_segment(video_path, idx, desc, segment, video_data, clip_rect):
     # filename without extension
     base_name = os.path.splitext(video_path)[0]
-    output_filename = f"{base_name}__seg{idx:04d}__{desc}.mp4"
+    output_filename = f"{base_name}__seg{idx:04d}__{desc}__concat.mp4"
 
     if os.path.isfile(output_filename) and not force_overwrite_existing:
         print(f"File {output_filename} already exists, skipping...")
@@ -120,9 +123,7 @@ def process_segment(video_path, idx, desc, segment, video_data):
     clip_duration = clip.duration  # keep track of the duration
 
     # Crop the video if clip_rect is specified
-    if 'clip_rect' in segment:
-        rect = segment['clip_rect']
-        clip = clip.fx(crop, x1=rect['x'], y1=rect['y'], x2=rect['end_x'], y2=rect['end_y'])
+    clip = clip.fx(crop, x1=clip_rect['x'], y1=clip_rect['y'], x2=clip_rect['end_x'], y2=clip_rect['end_y'])
 
     # Add image overlay if watermark_filename is specified
     if watermark_filename is not None:
@@ -149,17 +150,40 @@ def process_segment(video_path, idx, desc, segment, video_data):
 
     clip.write_videofile(output_filename)
 
+    return clip
+
 
 def process_video_toml(toml_file):
     with open(toml_file, 'r') as f:
         data = toml.load(f)
 
     video_data = data['video'][0]
+    video_path = video_data['title']
+    video_clip = VideoFileClip(video_path)
+    video_size = video_clip.size  # Get video size
 
-    print(f"\n\n======= Processing video: {os.path.basename(video_data['title'])} =======\n")
+    print(f"\n\n======= Processing video: {os.path.basename(video_path)} =======\n")
+
+    # Variables for concatenation
+    concat_clips = []
+    max_clip_rect = {'x': video_size[0], 'y': video_size[1], 'end_x': 0, 'end_y': 0}  # Initialized as video size
 
     for idx, segment in enumerate(video_data['segments']):
-        process_segment(video_data['title'], idx, segment['desc'], segment, video_data)
+        rect = segment.get('clip_rect', {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]})  
+        max_clip_rect['x'] = min(max_clip_rect['x'], rect['x'])  # x
+        max_clip_rect['y'] = min(max_clip_rect['y'], rect['y'])  # y
+        max_clip_rect['end_x'] = max(max_clip_rect['end_x'], rect['end_x'])  # end_x
+        max_clip_rect['end_y'] = max(max_clip_rect['end_y'], rect['end_y'])  # end_y
+
+    for idx, segment in enumerate(video_data['segments']):
+        output_clip = process_segment(video_path, idx, segment['desc'], segment, video_data, max_clip_rect)
+        if make_concatenation_video:
+            concat_clips.append(output_clip)
+
+    if make_concatenation_video:
+        final_clip = concatenate_videoclips(concat_clips)
+        final_output_filename = f"{os.path.splitext(video_path)[0]}__concat.mp4"
+        final_clip.write_videofile(final_output_filename)
 
 
 if __name__ == "__main__":
