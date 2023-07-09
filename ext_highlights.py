@@ -1,6 +1,8 @@
 import glob
 import sys
 import os
+from PIL import Image, ImageEnhance
+import numpy as np
 from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.video.VideoClip import ImageClip
@@ -14,7 +16,42 @@ force_overwrite_existing = False
 
 watermark_filename = "images/watermark.png"
 # watermark has its aspect ratio preserved
-watermark_height = 225
+default_watermark_height = 225
+# e.g. (0.9, 1.0, 1.2)
+default_rgb_mult = None
+
+
+def get_rgb_mult(segment, video_data):
+    return segment.get('rgb_mult', video_data.get('rgb_mult', default_rgb_mult))
+
+
+def load_image(image_path, rgb_mult = None):
+    if rgb_mult == None:
+        return ImageClip(image_path)
+
+    (r_mul, g_mul, b_mul) = rgb_mult
+
+    # Load the image
+    image = Image.open(image_path)
+
+    # Separate the image into individual color bands (channels)
+    r, g, b, a = image.split()
+
+    # Enhance the channels
+    r = r.point(lambda i: i * r_mul)
+    g = g.point(lambda i: i * g_mul)
+    b = b.point(lambda i: i * b_mul)
+
+    # Merge the channels back
+    merged_image = Image.merge('RGB', (r, g, b))
+
+    # PIL image to numpy array
+    np_image = np.array(merged_image)
+
+    # Create an ImageClip with MoviePy
+    image_clip = ImageClip(np_image)
+
+    return image_clip
 
 
 def get_watermark_position(video_size, watermark_size, watermark_position):
@@ -82,8 +119,6 @@ def process_segment(video_path, idx, desc, segment, video_data):
     clip = clip.subclip(start_time, end_time)
     clip_duration = clip.duration  # keep track of the duration
 
-    # print(f"======= Duration found: {clip_duration}")
-
     # Crop the video if clip_rect is specified
     if 'clip_rect' in segment:
         rect = segment['clip_rect']
@@ -91,23 +126,25 @@ def process_segment(video_path, idx, desc, segment, video_data):
 
     # Add image overlay if watermark_filename is specified
     if watermark_filename is not None:
+
+        rgb_mult = get_rgb_mult(segment, video_data)
         # Load the image and resize it
-        img = ImageClip(watermark_filename)
+        img = load_image(watermark_filename, rgb_mult)
+
+        # Decide watermark height
+        watermark_height = segment.get('watermark_height',
+                                        video_data.get('watermark_height', default_watermark_height))
         img = img.fx(resize, height=watermark_height)
 
         # Set the image clip's duration to match the video clip's
         img = img.set_duration(clip_duration)
 
-
         # Decide watermark position
         watermark_position = segment.get('watermark_position',
                                          video_data.get('watermark_position', default_watermark_position))
-
-        print(f"WM pos raw = {watermark_position}")
-
         watermark_position = get_watermark_position(clip.size, img.size, watermark_position)
-    
-        # composite video clip with the watermark image overlay
+
+        # a composite video clip with the watermark image overlay
         clip = CompositeVideoClip([clip, img.set_position(watermark_position)])
 
     clip.write_videofile(output_filename)
