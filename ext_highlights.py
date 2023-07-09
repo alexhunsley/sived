@@ -12,10 +12,10 @@ from moviepy.editor import concatenate_videoclips
 import toml
 
 
-make_concatenation_video = True
+make_concatenation_video = False
 
 default_watermark_position = ("left", "top")
-force_overwrite_existing = False
+force_overwrite_existing = True
 
 watermark_filename = "images/watermark.png"
 # watermark has its aspect ratio preserved
@@ -107,7 +107,8 @@ def time_to_seconds(time_string):
 def process_segment(video_path, idx, desc, segment, video_data, clip_rect):
     # filename without extension
     base_name = os.path.splitext(video_path)[0]
-    output_filename = f"{base_name}__seg{idx:04d}__{desc}__concat.mp4"
+
+    output_filename = f'{base_name}__seg{idx:04d}__{desc}{"__concat" if make_concatenation_video else ""}.mp4'
 
     if os.path.isfile(output_filename) and not force_overwrite_existing:
         print(f"File {output_filename} already exists, skipping...")
@@ -153,6 +154,15 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect):
     return clip
 
 
+# To fix: 
+#   with make_concatenation_video == False:
+#
+#     each clip needs its own clip obeying!
+#
+#   with make_concatenation_video == True:
+#
+#     each clip needs to offset the watermark by diff between own clip rect and the max (master) clip rect
+#
 def process_video_toml(toml_file):
     with open(toml_file, 'r') as f:
         data = toml.load(f)
@@ -166,17 +176,35 @@ def process_video_toml(toml_file):
 
     # Variables for concatenation
     concat_clips = []
-    max_clip_rect = {'x': video_size[0], 'y': video_size[1], 'end_x': 0, 'end_y': 0}  # Initialized as video size
+
+    # Initialized as video size
+    # max_clip_rect = {'x': video_size[0], 'y': video_size[1], 'end_x': 0, 'end_y': 0} if make_concatenation_video else {}
+
+    # value which anything can trump when unioning
+    # max_clip_rect = {'x': video_size[0], 'y': video_size[1], 'end_x': 0, 'end_y': 0} if make_concatenation_video else  {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]}
+    max_clip_rect = {'x': video_size[0], 'y': video_size[1], 'end_x': 0, 'end_y': 0}
+
+    print(f"=-=-==-=   max_clip_rect = {max_clip_rect}")
+
+    if make_concatenation_video:
+        print(f"=-=-==-=   in make_concatenation_video bit")
+
+        for idx, segment in enumerate(video_data['segments']):
+            rect = segment.get('clip_rect', {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]})  
+            max_clip_rect['x'] = min(max_clip_rect['x'], rect['x'])  # x
+            max_clip_rect['y'] = min(max_clip_rect['y'], rect['y'])  # y
+            max_clip_rect['end_x'] = max(max_clip_rect['end_x'], rect['end_x'])  # end_x
+            max_clip_rect['end_y'] = max(max_clip_rect['end_y'], rect['end_y'])  # end_y
+
 
     for idx, segment in enumerate(video_data['segments']):
-        rect = segment.get('clip_rect', {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]})  
-        max_clip_rect['x'] = min(max_clip_rect['x'], rect['x'])  # x
-        max_clip_rect['y'] = min(max_clip_rect['y'], rect['y'])  # y
-        max_clip_rect['end_x'] = max(max_clip_rect['end_x'], rect['end_x'])  # end_x
-        max_clip_rect['end_y'] = max(max_clip_rect['end_y'], rect['end_y'])  # end_y
+        print(f"=-=-==-=   in segment bit, idx = {idx} segment = {segment}")
 
-    for idx, segment in enumerate(video_data['segments']):
-        output_clip = process_segment(video_path, idx, segment['desc'], segment, video_data, max_clip_rect)
+        use_clip_rect = max_clip_rect if make_concatenation_video else segment.get('clip_rect', {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]})
+
+        print(f"=-=-==-=      ... use_clip_rect for {idx} = {use_clip_rect}")
+
+        output_clip = process_segment(video_path, idx, segment['desc'], segment, video_data, use_clip_rect)
         if make_concatenation_video:
             concat_clips.append(output_clip)
 
