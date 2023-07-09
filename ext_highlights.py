@@ -12,7 +12,7 @@ from moviepy.editor import concatenate_videoclips
 import toml
 
 
-make_concatenation_video = False
+make_concatenation_video = True
 
 default_watermark_position = ("left", "top")
 force_overwrite_existing = True
@@ -57,13 +57,18 @@ def load_image(image_path, rgb_mult = None):
     return image_clip
 
 
-def get_watermark_position(video_size, watermark_size, watermark_position):
+def get_watermark_position(video_clip_rect, watermark_size, watermark_position, segment_offset_inside_context):
+
+    print(f"get_watermark_position: video_clip_rect = {video_clip_rect}, watermark_size = {watermark_size}, watermark_position = {watermark_position}, segment_offset_inside_context = {segment_offset_inside_context}")
 
     wp_dict = dict(enumerate(watermark_position))
 
     # Get the video width and height
-    video_width, video_height = video_size
+    # _, _, video_width, video_height = video_clip_rect
+    video_width = video_clip_rect['end_x'] - video_clip_rect['x']
+    video_height = video_clip_rect['end_y'] - video_clip_rect['y']
 
+    print(f"GOT VID WID, HEI: {video_width} {video_height}")
     # Get the watermark width and height
     watermark_width, watermark_height = watermark_size
 
@@ -90,7 +95,8 @@ def get_watermark_position(video_size, watermark_size, watermark_position):
     elif watermark_position[1] == "top":
         y = 0
 
-    return (x, y)
+    print(f"  >>>> get_watermark_position: to xy of {x} {y} am adding segment_offset_inside_context = {segment_offset_inside_context}")
+    return (x + segment_offset_inside_context['x'], y + segment_offset_inside_context['y'])
 
 
 # Convert "h:m:s" to seconds, with all components after right-most optional.
@@ -104,7 +110,9 @@ def time_to_seconds(time_string):
     return total_seconds
 
 
-def process_segment(video_path, idx, desc, segment, video_data, clip_rect):
+# clip_rect is for just this segment. It might be actual seg rect or the union'd rect.
+# segment_clip_rect the segment's own clip rect as per toml.
+def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segment_clip_rect):
     # filename without extension
     base_name = os.path.splitext(video_path)[0]
 
@@ -144,7 +152,15 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect):
         # Decide watermark position
         watermark_position = segment.get('watermark_position',
                                          video_data.get('watermark_position', default_watermark_position))
-        watermark_position = get_watermark_position(clip.size, img.size, watermark_position)
+
+        watermark_offset_in_context = {'x': 0, 'y': 0}
+
+        if make_concatenation_video:
+            watermark_offset_in_context['x'] += segment_clip_rect['x'] - clip_rect['x']
+            watermark_offset_in_context['y'] += segment_clip_rect['y'] - clip_rect['y']
+            print(f"Made a watermark_offset_in_context: {watermark_offset_in_context} from seg clip_rect = {clip_rect}")
+
+        watermark_position = get_watermark_position(clip_rect, img.size, watermark_position, watermark_offset_in_context)
 
         # a composite video clip with the watermark image overlay
         clip = CompositeVideoClip([clip, img.set_position(watermark_position)])
@@ -180,7 +196,7 @@ def process_video_toml(toml_file):
     # Initialized as video size
     # max_clip_rect = {'x': video_size[0], 'y': video_size[1], 'end_x': 0, 'end_y': 0} if make_concatenation_video else {}
 
-    # value which anything can trump when unioning
+    # value which anything can be trumped when unioning. Note origin and size other way round! deliberate.
     # max_clip_rect = {'x': video_size[0], 'y': video_size[1], 'end_x': 0, 'end_y': 0} if make_concatenation_video else  {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]}
     max_clip_rect = {'x': video_size[0], 'y': video_size[1], 'end_x': 0, 'end_y': 0}
 
@@ -191,20 +207,23 @@ def process_video_toml(toml_file):
 
         for idx, segment in enumerate(video_data['segments']):
             rect = segment.get('clip_rect', {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]})  
+            print(f"   IN MIN/MAX, befpre comp, clip rect {rect} and max_clip_rect is {max_clip_rect}")
             max_clip_rect['x'] = min(max_clip_rect['x'], rect['x'])  # x
             max_clip_rect['y'] = min(max_clip_rect['y'], rect['y'])  # y
             max_clip_rect['end_x'] = max(max_clip_rect['end_x'], rect['end_x'])  # end_x
             max_clip_rect['end_y'] = max(max_clip_rect['end_y'], rect['end_y'])  # end_y
+            print(f"   IN MIN/MAX,     after comp, clip rect {rect} and max_clip_rect is {max_clip_rect}")
 
 
     for idx, segment in enumerate(video_data['segments']):
         print(f"=-=-==-=   in segment bit, idx = {idx} segment = {segment}")
 
-        use_clip_rect = max_clip_rect if make_concatenation_video else segment.get('clip_rect', {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]})
+        segment_clip_rect = segment.get('clip_rect', {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]})
+        use_clip_rect = max_clip_rect if make_concatenation_video == True else segment_clip_rect
 
         print(f"=-=-==-=      ... use_clip_rect for {idx} = {use_clip_rect}")
 
-        output_clip = process_segment(video_path, idx, segment['desc'], segment, video_data, use_clip_rect)
+        output_clip = process_segment(video_path, idx, segment['desc'], segment, video_data, use_clip_rect, segment_clip_rect) #, max_clip_rect if make_concatenation_video else None)
         if make_concatenation_video:
             concat_clips.append(output_clip)
 
