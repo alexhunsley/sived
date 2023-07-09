@@ -14,7 +14,43 @@ force_overwrite_existing = False
 
 watermark_filename = "images/watermark.png"
 # watermark has its aspect ratio preserved
-watermark_height = 300
+watermark_height = 225
+
+
+def get_watermark_position(video_size, watermark_size, watermark_position):
+
+    wp_dict = dict(enumerate(watermark_position))
+
+    # Get the video width and height
+    video_width, video_height = video_size
+
+    # Get the watermark width and height
+    watermark_width, watermark_height = watermark_size
+
+    x = wp_dict.get(0)
+    y = wp_dict.get(1)
+
+    if x == None:
+        x = 0
+
+    if y == None:
+        y = 0
+
+    if watermark_position[0] == "right" or watermark_position[0] == -1:
+        x = video_width - watermark_width
+    elif watermark_position[0] == -2:
+        x = (video_width - watermark_width) / 2.0
+    elif watermark_position[0] == "left":
+        x = 0
+
+    if watermark_position[1] == "bottom" or watermark_position[1] == -1:
+        y = video_height - watermark_height            
+    elif watermark_position[1] == -2:
+        y = (video_height - watermark_height) / 2.0
+    elif watermark_position[1] == "top":
+        y = 0
+
+    return (x, y)
 
 
 # Convert "h:m:s" to seconds, with all components after right-most optional.
@@ -28,7 +64,7 @@ def time_to_seconds(time_string):
     return total_seconds
 
 
-def process_segment(video_path, idx, desc, segment):
+def process_segment(video_path, idx, desc, segment, video_data):
     # filename without extension
     base_name = os.path.splitext(video_path)[0]
     output_filename = f"{base_name}__seg{idx:04d}__{desc}.mp4"
@@ -62,8 +98,17 @@ def process_segment(video_path, idx, desc, segment):
         # Set the image clip's duration to match the video clip's
         img = img.set_duration(clip_duration)
 
+
+        # Decide watermark position
+        watermark_position = segment.get('watermark_position',
+                                         video_data.get('watermark_position', default_watermark_position))
+
+        print(f"WM pos raw = {watermark_position}")
+
+        watermark_position = get_watermark_position(clip.size, img.size, watermark_position)
+    
         # composite video clip with the watermark image overlay
-        clip = CompositeVideoClip([clip, img.set_position(default_watermark_position)])
+        clip = CompositeVideoClip([clip, img.set_position(watermark_position)])
 
     clip.write_videofile(output_filename)
 
@@ -77,7 +122,7 @@ def process_video_toml(toml_file):
     print(f"\n\n======= Processing video: {os.path.basename(video_data['title'])} =======\n")
 
     for idx, segment in enumerate(video_data['segments']):
-        process_segment(video_data['title'], idx, segment['desc'], segment)
+        process_segment(video_data['title'], idx, segment['desc'], segment, video_data)
 
 
 if __name__ == "__main__":
