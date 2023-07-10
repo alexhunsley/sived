@@ -233,7 +233,9 @@ def process_video_toml(toml_file):
 
         output_clip = process_segment(video_path, idx, segment['desc'], segment, video_data, use_clip_rect, segment_clip_rect) #, max_clip_rect if make_concatenation_video else None)
         if make_concatenation_video:
-            concat_clips.append(output_clip)
+            reel_loop_count = segment.get('reel_loop_count', 1)
+            for i in range(0, reel_loop_count):
+                concat_clips.append(output_clip)
 
     if make_concatenation_video:
         final_clip = concatenate_videoclips(concat_clips)
