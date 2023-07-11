@@ -17,20 +17,19 @@ import toml
 # REMINDER:
 #   fading is only applied to the showreel (concat) video
 #
-# We now allow specifying of inout video title per segment (fallback to video section).
+# We now allow specifying of video_filename per segment (with fallback to video section).
 # This is assuming all input videos have same resolution! This requirement might go away
 # once we impl the target resolution (for output video) stuff
 #
+# Have a way to force closeup -- even if will be <1 input pixel per pixel rendered.
+#
+# Way to pull a still image from a video and make duration clip from that.
+#
+
+toml_base_filename = None
 
 make_concatenation_video = True
-
 force_overwrite_existing = True
-
-default_watermark_filename = "images/watermark.png"
-# watermark has its aspect ratio preserved
-default_watermark_height = 225
-# e.g. (0.9, 1.0, 1.2)
-default_rgb_mult = None
 
 
 def get_inherited_value(key, segment, video_data, default_value=None):
@@ -38,7 +37,14 @@ def get_inherited_value(key, segment, video_data, default_value=None):
 
 
 def get_video_filename(segment, video_data):
-    return get_inherited_value('video_filename', segment, video_data, None)
+
+    video_path = get_inherited_value('video_filename', segment, video_data, None)
+
+    if video_path is None:
+        # default to mp4 file with same name as toml
+        video_path = f"{toml_file.split('.')[0]}.mp4"
+
+    return video_path
 
 
 def get_rgb_mult(segment, video_data):
@@ -46,11 +52,12 @@ def get_rgb_mult(segment, video_data):
 
 
 def get_watermark_filename(segment, video_data):
-    return get_inherited_value('watermark_filename', segment, video_data)
+    return get_inherited_value('watermark_filename', segment, video_data, None)
 
 
+# watermark has its aspect ratio preserved
 def get_watermark_height(segment, video_data):
-    return get_inherited_value('watermark_height', segment, video_data, default_watermark_height)
+    return get_inherited_value('watermark_height', segment, video_data, 225)
 
 
 def get_watermark_position(segment, video_data):
@@ -147,13 +154,51 @@ def time_to_seconds(time_string):
     return total_seconds
 
 
+# applies a watermark if necessary, returning the resulting clip (or the original clip otherwise)
+def apply_watermark(clip, clip_rect, clip_offset_in_context, segment, video_data):
+
+    watermark_filename = get_watermark_filename(segment, video_data)
+
+    if watermark_filename is None:
+        return clip
+
+    rgb_mult = get_rgb_mult(segment, video_data)
+    # Load the image and resize it
+    img = load_image(watermark_filename, rgb_mult)
+
+    # Decide watermark height
+    watermark_height = get_watermark_height(segment, video_data)
+
+    img = img.fx(resize, height=watermark_height)
+
+    # Set the image clip's duration to match the video clip's
+    img = img.set_duration(clip.duration)
+
+    # Decide watermark position
+    watermark_position = get_watermark_position(segment, video_data)
+
+    watermark_offset_in_context = {'x': 0, 'y': 0}
+
+    if make_concatenation_video:
+        watermark_offset_in_context['x'] += clip_offset_in_context['x'] - clip_rect['x']
+        watermark_offset_in_context['y'] += clip_offset_in_context['y'] - clip_rect['y']
+        # print(f"Made a watermark_offset_in_context: {watermark_offset_in_context} from seg clip_rect = {clip_rect}")
+
+    watermark_position = calc_watermark_position(clip_rect, img.size, watermark_position, watermark_offset_in_context)
+
+    # a composite video clip with the watermark image overlay
+    return CompositeVideoClip([clip, img.set_position(watermark_position)])
+
+
 # clip_rect is for just this segment. It might be actual seg rect or the union'd rect.
 # segment_clip_rect the segment's own clip rect as per toml.
 def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segment_clip_rect):
     # filename without extension
-    base_name = os.path.splitext(video_path)[0]
+    video_base_filename = os.path.splitext(video_path)[0]
 
-    output_filename = f'{base_name}__seg{idx:04d}__{desc}{"__concat" if make_concatenation_video else ""}.mp4'
+
+    # output_filename = f'{toml_base_filename}__{video_base_filename}__seg{idx:04d}__{desc}{"__concat" if make_concatenation_video else ""}.mp4'
+    output_filename = f'{toml_base_filename}__{video_path}__seg{idx:04d}__{desc}{"__concat" if make_concatenation_video else ""}.mp4'
 
     if os.path.isfile(output_filename) and not force_overwrite_existing:
         if make_concatenation_video:
@@ -174,37 +219,37 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
     # Crop the video if clip_rect is specified
     clip = clip.fx(crop, x1=clip_rect['x'], y1=clip_rect['y'], x2=clip_rect['end_x'], y2=clip_rect['end_y'])
 
-    # Add image overlay if watermark_filename is specified
-    watermark_filename = get_watermark_filename(segment, video_data)
+    # segment_clip_rect has the x, y we need for clip_offset_in_context
+    clip = apply_watermark(clip, clip_rect, segment_clip_rect, segment, video_data)
 
-    if watermark_filename is not None:
+    # if watermark_filename is not None:
 
-        rgb_mult = get_rgb_mult(segment, video_data)
-        # Load the image and resize it
-        img = load_image(watermark_filename, rgb_mult)
+    #     rgb_mult = get_rgb_mult(segment, video_data)
+    #     # Load the image and resize it
+    #     img = load_image(watermark_filename, rgb_mult)
 
-        # Decide watermark height
-        watermark_height = get_watermark_height(segment, video_data)
+    #     # Decide watermark height
+    #     watermark_height = get_watermark_height(segment, video_data)
 
-        img = img.fx(resize, height=watermark_height)
+    #     img = img.fx(resize, height=watermark_height)
 
-        # Set the image clip's duration to match the video clip's
-        img = img.set_duration(clip_duration)
+    #     # Set the image clip's duration to match the video clip's
+    #     img = img.set_duration(clip_duration)
 
-        # Decide watermark position
-        watermark_position = get_watermark_position(segment, video_data)
+    #     # Decide watermark position
+    #     watermark_position = get_watermark_position(segment, video_data)
 
-        watermark_offset_in_context = {'x': 0, 'y': 0}
+    #     watermark_offset_in_context = {'x': 0, 'y': 0}
 
-        if make_concatenation_video:
-            watermark_offset_in_context['x'] += segment_clip_rect['x'] - clip_rect['x']
-            watermark_offset_in_context['y'] += segment_clip_rect['y'] - clip_rect['y']
-            # print(f"Made a watermark_offset_in_context: {watermark_offset_in_context} from seg clip_rect = {clip_rect}")
+    #     if make_concatenation_video:
+    #         watermark_offset_in_context['x'] += segment_clip_rect['x'] - clip_rect['x']
+    #         watermark_offset_in_context['y'] += segment_clip_rect['y'] - clip_rect['y']
+    #         # print(f"Made a watermark_offset_in_context: {watermark_offset_in_context} from seg clip_rect = {clip_rect}")
 
-        watermark_position = calc_watermark_position(clip_rect, img.size, watermark_position, watermark_offset_in_context)
+    #     watermark_position = calc_watermark_position(clip_rect, img.size, watermark_position, watermark_offset_in_context)
 
-        # a composite video clip with the watermark image overlay
-        clip = CompositeVideoClip([clip, img.set_position(watermark_position)])
+    #     # a composite video clip with the watermark image overlay
+    #     clip = CompositeVideoClip([clip, img.set_position(watermark_position)])
 
     clip.write_videofile(output_filename)
 
@@ -221,6 +266,9 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
 #     each clip needs to offset the watermark by diff between own clip rect and the max (master) clip rect
 #
 def process_video_toml(toml_file):
+    global toml_base_filename
+    toml_base_filename = toml_file
+
     with open(toml_file, 'r') as f:
         data = toml.load(f)
 
@@ -230,10 +278,7 @@ def process_video_toml(toml_file):
     first_segment = video_data['segments'][0]
     video_path = get_video_filename(first_segment, video_data)
 
-    if video_path is None:
-        # default to mp4 file with same name as toml
-        video_path = f"{toml_file.split('.')[0]}.mp4"
-
+    # does this load lots of data into memory up front? I'm guessing not.
     video_clip = VideoFileClip(video_path)
     video_size = video_clip.size  # Get video size
 
@@ -267,6 +312,9 @@ def process_video_toml(toml_file):
 
     for idx, segment in enumerate(video_data['segments']):
         # print(f"=-=-==-=   in segment bit, idx = {idx} segment = {segment}")
+
+        # guess could cache the vids in memory? not sure what being automatically unloaded, anyhoo
+        video_path = get_video_filename(segment, video_data)
 
         # Determine fade duration from the TOML data
         # (Default to -1 second i.e. disabled if not specified)
