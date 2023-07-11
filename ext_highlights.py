@@ -145,14 +145,43 @@ def calc_watermark_position(video_clip_rect, watermark_size, watermark_position,
 
 # Convert "h:m:s" to seconds, with all components apart from seconds optional.
 # i.e. can be "m:s" or just "s". The numbers are floats, so can use e.g. "1.5" for seconds.
+# If you want frames, use e.g. "6+4/30", which means 6 + 4/30 secs.
+# If the denominator is 30, you can just write "6+4" as a shortcut.
 def time_to_seconds(time_string):
-    components = list(map(float, time_string.split(':')))[::-1]
-    # components = list(map(int, time_string.split(':')))[::-1]
+    components = time_string.split(':')
+
+    # interpret the seconds
+    if '+' in components[-1]:
+        if '/' in components[-1]:
+            int_part, fraction_part = components[-1].split('+')
+            numerator, denominator = map(float, fraction_part.split('/'))
+        else:
+            int_part, fraction_part = components[-1].split('+')
+            numerator = float(fraction_part)
+            denominator = 30.0
+
+        seconds = float(int_part) + numerator / denominator
+    else:
+        seconds = float(components[-1])
+
+    # interpret the minutes and hours
+    components = components[:-1] + [seconds]
+    components = list(map(float, components))[::-1]
     multipliers = [1, 60, 3600]  # Seconds, Minutes, Hours
 
     total_seconds = sum(component * multiplier for component, multiplier in zip(components, multipliers))
 
     return total_seconds
+
+
+# print(time_to_seconds("02"))
+# print(time_to_seconds("2.0"))
+# print(time_to_seconds("00:30:02.1"))
+# print(time_to_seconds("01:00:02+15"))
+# print(time_to_seconds("00:00:02+15/30"))
+# print(time_to_seconds("00:00:02+45/60"))
+# print(time_to_seconds("00:00:02.1+45/60"))
+# sys.exit(1)
 
 
 # applies a watermark if necessary, returning the resulting clip (or the original clip otherwise)
