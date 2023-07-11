@@ -143,10 +143,11 @@ def calc_watermark_position(video_clip_rect, watermark_size, watermark_position,
     return (x + segment_offset_inside_context['x'], y + segment_offset_inside_context['y'])
 
 
-# Convert "h:m:s" to seconds, with all components after right-most optional.
-# i.e. can be "m:s" or just "s"
+# Convert "h:m:s" to seconds, with all components apart from seconds optional.
+# i.e. can be "m:s" or just "s". The numbers are floats, so can use e.g. "1.5" for seconds.
 def time_to_seconds(time_string):
-    components = list(map(int, time_string.split(':')))[::-1]
+    components = list(map(float, time_string.split(':')))[::-1]
+    # components = list(map(int, time_string.split(':')))[::-1]
     multipliers = [1, 60, 3600]  # Seconds, Minutes, Hours
 
     total_seconds = sum(component * multiplier for component, multiplier in zip(components, multipliers))
