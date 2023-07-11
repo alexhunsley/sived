@@ -9,6 +9,9 @@ from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 from moviepy.video.fx.all import crop, resize
 from moviepy.editor import concatenate_videoclips
+# from moviepy.video.compositing.transitions import crossfadein, crossfadeout
+from moviepy.video.fx.all import fadein, fadeout
+from moviepy.video.VideoClip import ColorClip
 import toml
 
 make_concatenation_video = True
@@ -211,6 +214,7 @@ def process_video_toml(toml_file):
     # print(f"=-=-==-=   max_clip_rect = {max_clip_rect}")
 
     if make_concatenation_video:
+
         # print(f"=-=-==-=   in make_concatenation_video bit")
 
         for idx, segment in enumerate(video_data['segments']):
@@ -226,13 +230,32 @@ def process_video_toml(toml_file):
     for idx, segment in enumerate(video_data['segments']):
         # print(f"=-=-==-=   in segment bit, idx = {idx} segment = {segment}")
 
+        # Determine fade duration from the TOML data
+        # (Default to -1 second i.e. disabled if not specified)
+        fade_duration = segment.get('fade_duration', video_data.get('fade_duration', 0))
+        fade_mode = segment.get('fade_mode', video_data.get('fade_mode', None))
+
         segment_clip_rect = segment.get('clip_rect', {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]})
         use_clip_rect = max_clip_rect if make_concatenation_video == True else segment_clip_rect
 
         # print(f"=-=-==-=      ... use_clip_rect for {idx} = {use_clip_rect}")
 
         output_clip = process_segment(video_path, idx, segment['desc'], segment, video_data, use_clip_rect, segment_clip_rect) #, max_clip_rect if make_concatenation_video else None)
+
         if make_concatenation_video:
+            print(f"fade_duration = {fade_duration}")
+            if fade_duration > 0 and fade_mode:
+                print(f" ... so applying crossfade in and out")
+
+                # Apply fade in/out/both to clip
+                if fade_mode == "both" or fade_mode == "in": 
+                    output_clip = output_clip.fx(fadein, fade_duration)
+
+                if fade_mode == "both" or fade_mode == "out":
+                    output_clip = output_clip.fx(fadeout, fade_duration)
+
+                # output_clip = output_clip.crossfadein(fade_duration).crossfadeout(fade_duration)
+
             reel_loop_count = segment.get('reel_loop_count', 1)
             for i in range(0, reel_loop_count):
                 concat_clips.append(output_clip)
