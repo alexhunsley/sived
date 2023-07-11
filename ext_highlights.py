@@ -14,6 +14,9 @@ from moviepy.video.fx.all import fadein, fadeout
 from moviepy.video.VideoClip import ColorClip
 import toml
 
+# REMINDER:
+#   fading is only applied to the showreel (concat) video
+
 make_concatenation_video = True
 
 default_watermark_position = ("left", "top")
@@ -26,12 +29,32 @@ default_watermark_height = 225
 default_rgb_mult = None
 
 
+def get_inherited_value(key, segment, video_data, default_value=None):
+    return segment.get(key, video_data.get(key, default_value))
+
+
 def get_rgb_mult(segment, video_data):
-    return segment.get('rgb_mult', video_data.get('rgb_mult', default_rgb_mult))
+    return get_inherited_value('rgb_mult', segment, video_data)
 
 
 def get_watermark_filename(segment, video_data):
-    return segment.get('watermark_filename', video_data.get('watermark_filename', default_rgb_mult))
+    return get_inherited_value('watermark_filename', segment, video_data)
+
+
+def get_watermark_height(segment, video_data):
+    return get_inherited_value('watermark_height', segment, video_data, default_watermark_height)
+
+
+def get_watermark_position(segment, video_data):
+    return get_inherited_value('watermark_position', segment, video_data, default_watermark_position)
+
+
+def get_fade_mode(segment, video_data):
+    return get_inherited_value('fade_mode', segment, video_data, False)
+
+
+def get_fade_duration(segment, video_data):
+    return get_inherited_value('fade_duration', segment, video_data, -1)
 
 
 def load_image(image_path, rgb_mult = None):
@@ -63,7 +86,7 @@ def load_image(image_path, rgb_mult = None):
     return image_clip
 
 
-def get_watermark_position(video_clip_rect, watermark_size, watermark_position, segment_offset_inside_context):
+def calc_watermark_position(video_clip_rect, watermark_size, watermark_position, segment_offset_inside_context):
 
     # print(f"get_watermark_position: video_clip_rect = {video_clip_rect}, watermark_size = {watermark_size}, watermark_position = {watermark_position}, segment_offset_inside_context = {segment_offset_inside_context}")
 
@@ -153,16 +176,15 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
         img = load_image(watermark_filename, rgb_mult)
 
         # Decide watermark height
-        watermark_height = segment.get('watermark_height',
-                                        video_data.get('watermark_height', default_watermark_height))
+        watermark_height = get_watermark_height(segment, video_data)
+
         img = img.fx(resize, height=watermark_height)
 
         # Set the image clip's duration to match the video clip's
         img = img.set_duration(clip_duration)
 
         # Decide watermark position
-        watermark_position = segment.get('watermark_position',
-                                         video_data.get('watermark_position', default_watermark_position))
+        watermark_position = get_watermark_position(segment, video_data)
 
         watermark_offset_in_context = {'x': 0, 'y': 0}
 
@@ -171,7 +193,7 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
             watermark_offset_in_context['y'] += segment_clip_rect['y'] - clip_rect['y']
             # print(f"Made a watermark_offset_in_context: {watermark_offset_in_context} from seg clip_rect = {clip_rect}")
 
-        watermark_position = get_watermark_position(clip_rect, img.size, watermark_position, watermark_offset_in_context)
+        watermark_position = calc_watermark_position(clip_rect, img.size, watermark_position, watermark_offset_in_context)
 
         # a composite video clip with the watermark image overlay
         clip = CompositeVideoClip([clip, img.set_position(watermark_position)])
@@ -232,9 +254,10 @@ def process_video_toml(toml_file):
 
         # Determine fade duration from the TOML data
         # (Default to -1 second i.e. disabled if not specified)
-        fade_duration = segment.get('fade_duration', video_data.get('fade_duration', 0))
-        fade_mode = segment.get('fade_mode', video_data.get('fade_mode', None))
+        fade_duration = get_fade_duration(segment, video_data)
+        fade_mode = get_fade_mode(segment, video_data)
 
+        print(f"  =--=-==-=-= fade_mode = {fade_mode} fade_duration = {fade_duration} ")
         segment_clip_rect = segment.get('clip_rect', {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]})
         use_clip_rect = max_clip_rect if make_concatenation_video == True else segment_clip_rect
 
