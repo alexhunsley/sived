@@ -16,10 +16,14 @@ import toml
 
 # REMINDER:
 #   fading is only applied to the showreel (concat) video
+#
+# We now allow specifying of inout video title per segment (fallback to video section).
+# This is assuming all input videos have same resolution! This requirement might go away
+# once we impl the target resolution (for output video) stuff
+#
 
 make_concatenation_video = True
 
-default_watermark_position = ("left", "top")
 force_overwrite_existing = True
 
 default_watermark_filename = "images/watermark.png"
@@ -31,6 +35,10 @@ default_rgb_mult = None
 
 def get_inherited_value(key, segment, video_data, default_value=None):
     return segment.get(key, video_data.get(key, default_value))
+
+
+def get_video_filename(segment, video_data):
+    return get_inherited_value('video_filename', segment, video_data, None)
 
 
 def get_rgb_mult(segment, video_data):
@@ -46,7 +54,7 @@ def get_watermark_height(segment, video_data):
 
 
 def get_watermark_position(segment, video_data):
-    return get_inherited_value('watermark_position', segment, video_data, default_watermark_position)
+    return get_inherited_value('watermark_position', segment, video_data, ("left", "top"))
 
 
 def get_fade_mode(segment, video_data):
@@ -217,7 +225,15 @@ def process_video_toml(toml_file):
         data = toml.load(f)
 
     video_data = data['video'][0]
-    video_path = video_data['title']
+
+    # use first segment for title and hence finding res of video (assumption)
+    first_segment = video_data['segments'][0]
+    video_path = get_video_filename(first_segment, video_data)
+
+    if video_path is None:
+        # default to mp4 file with same name as toml
+        video_path = f"{toml_file.split('.')[0]}.mp4"
+
     video_clip = VideoFileClip(video_path)
     video_size = video_clip.size  # Get video size
 
