@@ -237,10 +237,10 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
         print(f"File {output_filename} already exists, skipping...")
         return
 
-    start_time = time_to_seconds(segment['start_time'])
-    end_time = time_to_seconds(segment['end_time'])
-
     clip = VideoFileClip(video_path)
+
+    start_time = time_to_seconds(segment.get('start_time', "0"))
+    end_time = time_to_seconds(segment.get('end_time', f"{clip.duration}"))
 
     # Trim
     clip = clip.subclip(start_time, end_time)
