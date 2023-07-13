@@ -7,7 +7,7 @@ from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
-from moviepy.video.fx.all import crop, resize
+from moviepy.video.fx.all import crop, resize, rotate
 from moviepy.editor import concatenate_videoclips
 # from moviepy.video.compositing.transitions import crossfadein, crossfadeout
 from moviepy.video.fx.all import fadein, fadeout
@@ -70,6 +70,10 @@ def get_fade_mode(segment, video_data):
 
 def get_fade_duration(segment, video_data):
     return get_inherited_value('fade_duration', segment, video_data, -1)
+
+
+def get_temp_rotate_90(segment, video_data):
+    return get_inherited_value('temp_rotate_90', segment, video_data, False)
 
 
 def load_image(image_path, rgb_mult = None):
@@ -226,7 +230,6 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
     # filename without extension
     video_base_filename = os.path.splitext(video_path)[0]
 
-
     # output_filename = f'{toml_base_filename}__{video_base_filename}__seg{idx:04d}__{desc}{"__concat" if make_concatenation_video else ""}.mp4'
     output_filename = f'{toml_base_filename}__{video_path}__seg{idx:04d}__{desc}{"__concat" if make_concatenation_video else ""}.mp4'
 
@@ -239,6 +242,8 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
 
     clip = VideoFileClip(video_path)
 
+    print(f"  -------- clip rotation: {clip.rotation}")
+
     start_time = time_to_seconds(segment.get('start_time', "0"))
     end_time = time_to_seconds(segment.get('end_time', f"{clip.duration}"))
 
@@ -246,24 +251,25 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
     clip = clip.subclip(start_time, end_time)
     clip_duration = clip.duration  # keep track of the duration
 
+    # this command shows -90 for a video, but clip.rotation comes back 0!
+    # and in fact I need to invert x and y, NOT do rotate.
+    #   ffprobe -v 0 -select_streams v:0 -show_entries stream_side_data=rotation -of default=nw=1:nk=1 video15.mov
 
-    #     # Set the image clip's duration to match the video clip's
-    #     img = img.set_duration(clip_duration)
+    # clip rotation in file comes back 0 -- but we need something != 0, clearly!
+    # clip = clip.fx(rotate, -90)
 
-    #     # Decide watermark position
-    #     watermark_position = get_watermark_position(segment, video_data)
+    # if clip.rotation == 90:
+        # clip.rotation = 0
 
-    #     watermark_offset_in_context = {'x': 0, 'y': 0}
+    # Crop the video if clip_rect is specified
+    # order of crop and resize matters.
+    clip = clip.fx(crop, x1=clip_rect['x'], y1=clip_rect['y'], x2=clip_rect['end_x'], y2=clip_rect['end_y'])
 
-    #     if make_concatenation_video:
-    #         watermark_offset_in_context['x'] += segment_clip_rect['x'] - clip_rect['x']
-    #         watermark_offset_in_context['y'] += segment_clip_rect['y'] - clip_rect['y']
-    #         # print(f"Made a watermark_offset_in_context: {watermark_offset_in_context} from seg clip_rect = {clip_rect}")
+    if get_temp_rotate_90(segment, video_data):
+        clip = clip.resize(clip.size[::-1])
 
-    #     watermark_position = calc_watermark_position(clip_rect, img.size, watermark_position, watermark_offset_in_context)
-
-    #     # a composite video clip with the watermark image overlay
-    #     clip = CompositeVideoClip([clip, img.set_position(watermark_position)])
+    # segment_clip_rect has the x, y we need for clip_offset_in_context
+    clip = apply_watermark(clip, clip_rect, segment_clip_rect, segment, video_data)
 
     clip.write_videofile(output_filename)
 
@@ -285,9 +291,9 @@ def process_video_toml(toml_file):
 
     # does this load lots of data into memory up front? I'm guessing not.
     video_clip = VideoFileClip(video_path)
-    video_size = video_clip.size  # Get video size
+    video_size = video_clip.size
 
-    print(f"\n\n======= Processing video: {os.path.basename(video_path)} =======\n")
+    print(f"\n\n======= Processing video: {os.path.basename(video_path)}  got size = {video_size} =======\n")
 
     # Variables for concatenation
     concat_clips = []
@@ -306,13 +312,16 @@ def process_video_toml(toml_file):
         # print(f"=-=-==-=   in make_concatenation_video bit")
 
         for idx, segment in enumerate(video_data['segments']):
-            rect = segment.get('clip_rect', {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]})  
-            # print(f"   IN MIN/MAX, befpre comp, clip rect {rect} and max_clip_rect is {max_clip_rect}")
+            rect = segment.get('clip_rect', {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]}) 
+
+            print(f"   IN MIN/MAX, befpre comp, clip rect {rect} and max_clip_rect is {max_clip_rect}")
+
             max_clip_rect['x'] = min(max_clip_rect['x'], rect['x'])  # x
             max_clip_rect['y'] = min(max_clip_rect['y'], rect['y'])  # y
             max_clip_rect['end_x'] = max(max_clip_rect['end_x'], rect['end_x'])  # end_x
             max_clip_rect['end_y'] = max(max_clip_rect['end_y'], rect['end_y'])  # end_y
-            # print(f"   IN MIN/MAX,     after comp, clip rect {rect} and max_clip_rect is {max_clip_rect}")
+
+            print(f"   IN MIN/MAX,     after comp, clip rect {rect} and max_clip_rect is {max_clip_rect}")
 
 
     for idx, segment in enumerate(video_data['segments']):
