@@ -76,6 +76,10 @@ def get_temp_transpose_xy_size(segment, video_data):
     return get_inherited_value('temp_transpose_xy_size', segment, video_data, False)
 
 
+def get_grab_frame(segment):
+    return segment.get('grab_frame')
+
+
 def load_image(image_path, rgb_mult = None):
     if rgb_mult == None:
         return ImageClip(image_path)
@@ -240,30 +244,46 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
         print(f"File {output_filename} already exists, skipping...")
         return
 
-    clip = VideoFileClip(video_path)
 
-    print(f"  -------- clip rotation: {clip.rotation}")
+    video_clip = VideoFileClip(video_path)
 
-    start_time = time_to_seconds(segment.get('start_time', "0"))
-    end_time = time_to_seconds(segment.get('end_time', f"{clip.duration}"))
+    # herus
+    if grab_frame := get_grab_frame(segment):
+        print(f"found a grab_frame: {grab_frame}")
+        # Convert the frame to an ImageClip
+        
+        frame = video_clip.get_frame(grab_frame['time']) 
+        clip = ImageClip(frame, duration=grab_frame['duration'])
 
-    # Trim
-    clip = clip.subclip(start_time, end_time)
-    clip_duration = clip.duration  # keep track of the duration
+        # TODO get from somewhere authoritative later, e.g. the reference video clip (later)
+        clip.fps = 30
 
-    # this command shows -90 for a video, but clip.rotation comes back 0!
-    # and in fact I need to invert x and y, NOT do rotate.
-    #   ffprobe -v 0 -select_streams v:0 -show_entries stream_side_data=rotation -of default=nw=1:nk=1 video15.mov
+    else:
+        clip = video_clip
+        # clip = VideoFileClip(video_path)
 
-    # clip rotation in file comes back 0 -- but we need something != 0, clearly!
-    # clip = clip.fx(rotate, -90)
+        print(f"  -------- clip rotation: {clip.rotation}")
 
-    # if clip.rotation == 90:
-        # clip.rotation = 0
+        start_time = time_to_seconds(segment.get('start_time', "0"))
+        end_time = time_to_seconds(segment.get('end_time', f"{clip.duration}"))
 
-    # Crop the video if clip_rect is specified
-    # order of crop and resize matters.
-    clip = clip.fx(crop, x1=clip_rect['x'], y1=clip_rect['y'], x2=clip_rect['end_x'], y2=clip_rect['end_y'])
+        # Trim
+        clip = clip.subclip(start_time, end_time)
+        clip_duration = clip.duration  # keep track of the duration
+
+        # this command shows -90 for a video, but clip.rotation comes back 0!
+        # and in fact I need to invert x and y, NOT do rotate.
+        #   ffprobe -v 0 -select_streams v:0 -show_entries stream_side_data=rotation -of default=nw=1:nk=1 video15.mov
+
+        # clip rotation in file comes back 0 -- but we need something != 0, clearly!
+        # clip = clip.fx(rotate, -90)
+
+        # if clip.rotation == 90:
+            # clip.rotation = 0
+
+        # Crop the video if clip_rect is specified
+        # order of crop and resize matters.
+        clip = clip.fx(crop, x1=clip_rect['x'], y1=clip_rect['y'], x2=clip_rect['end_x'], y2=clip_rect['end_y'])
 
     if get_temp_transpose_xy_size(segment, video_data):
         clip = clip.resize(clip.size[::-1])
