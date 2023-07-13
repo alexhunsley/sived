@@ -246,22 +246,6 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
     clip = clip.subclip(start_time, end_time)
     clip_duration = clip.duration  # keep track of the duration
 
-    # Crop the video if clip_rect is specified
-    clip = clip.fx(crop, x1=clip_rect['x'], y1=clip_rect['y'], x2=clip_rect['end_x'], y2=clip_rect['end_y'])
-
-    # segment_clip_rect has the x, y we need for clip_offset_in_context
-    clip = apply_watermark(clip, clip_rect, segment_clip_rect, segment, video_data)
-
-    # if watermark_filename is not None:
-
-    #     rgb_mult = get_rgb_mult(segment, video_data)
-    #     # Load the image and resize it
-    #     img = load_image(watermark_filename, rgb_mult)
-
-    #     # Decide watermark height
-    #     watermark_height = get_watermark_height(segment, video_data)
-
-    #     img = img.fx(resize, height=watermark_height)
 
     #     # Set the image clip's duration to match the video clip's
     #     img = img.set_duration(clip_duration)
@@ -286,15 +270,6 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
     return clip
 
 
-# To fix: 
-#   with make_concatenation_video == False:
-#
-#     each clip needs its own clip obeying!
-#
-#   with make_concatenation_video == True:
-#
-#     each clip needs to offset the watermark by diff between own clip rect and the max (master) clip rect
-#
 def process_video_toml(toml_file):
     global toml_base_filename
     toml_base_filename = toml_file
