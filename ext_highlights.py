@@ -72,8 +72,8 @@ def get_fade_duration(segment, video_data):
     return get_inherited_value('fade_duration', segment, video_data, -1)
 
 
-def get_temp_rotate_90(segment, video_data):
-    return get_inherited_value('temp_rotate_90', segment, video_data, False)
+def get_temp_transpose_xy_size(segment, video_data):
+    return get_inherited_value('temp_transpose_xy_size', segment, video_data, False)
 
 
 def load_image(image_path, rgb_mult = None):
@@ -265,7 +265,7 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
     # order of crop and resize matters.
     clip = clip.fx(crop, x1=clip_rect['x'], y1=clip_rect['y'], x2=clip_rect['end_x'], y2=clip_rect['end_y'])
 
-    if get_temp_rotate_90(segment, video_data):
+    if get_temp_transpose_xy_size(segment, video_data):
         clip = clip.resize(clip.size[::-1])
 
     # segment_clip_rect has the x, y we need for clip_offset_in_context
