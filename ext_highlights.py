@@ -1,18 +1,38 @@
 import glob
 import sys
 import os
-from PIL import Image, ImageEnhance
+import toml
 import numpy as np
+from PIL import Image, ImageEnhance
+from moviepy.editor import *
 from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 from moviepy.video.fx.all import crop, resize, rotate
 from moviepy.editor import concatenate_videoclips
-# from moviepy.video.compositing.transitions import crossfadein, crossfadeout
 from moviepy.video.fx.all import fadein, fadeout
 from moviepy.video.VideoClip import ColorClip
-import toml
+
+# This works for local run from command line: 
+#
+# In dir above:
+#
+#     python -m video-highlights.ext_highlights
+#
+#                   ^ package   .    ^ module (filename)
+#
+# or add that above dir to pythonpath by running this in this dir:
+#
+# export PYTHONPATH=`cd ..;pwd`
+#
+
+from .spec import *
+from .helpers import *
+
+
+script_dir = os.path.abspath(os.path.dirname(__file__))
+working_dir = os.getcwd()
 
 # REMINDER:
 #   fading is only applied to the showreel (concat) video
@@ -32,52 +52,37 @@ make_concatenation_video = True
 force_overwrite_existing = True
 
 
-def get_inherited_value(key, segment, video_data, default_value=None):
-    return segment.get(key, video_data.get(key, default_value))
+# Convert "h:m:s" to seconds, with all components apart from seconds optional.
+# i.e. can be "m:s" or just "s". The numbers are floats, so can use e.g. "1.5" for seconds.
+# If you want frames, use e.g. "6+4/30", which means 6 + 4/30 secs.
+# If the denominator is 30, you can just write "6+4" as a shortcut.
+def time_to_seconds(time_string):
+    print(f"   time_to_seconds got time_string: {time_string}")
 
+    components = time_string.split(':')
 
-def get_video_filename(segment, video_data):
+    # interpret the seconds
+    if '+' in components[-1]:
+        if '/' in components[-1]:
+            int_part, fraction_part = components[-1].split('+')
+            numerator, denominator = map(float, fraction_part.split('/'))
+        else:
+            int_part, fraction_part = components[-1].split('+')
+            numerator = float(fraction_part)
+            denominator = 30.0
 
-    video_path = get_inherited_value('video_filename', segment, video_data, None)
+        seconds = float(int_part) + numerator / denominator
+    else:
+        seconds = float(components[-1])
 
-    if video_path is None:
-        # default to mp4 file with same name as toml
-        video_path = f"{toml_file.split('.')[0]}.mp4"
+    # interpret the minutes and hours
+    components = components[:-1] + [seconds]
+    components = list(map(float, components))[::-1]
+    multipliers = [1, 60, 3600]  # Seconds, Minutes, Hours
 
-    return video_path
+    total_seconds = sum(component * multiplier for component, multiplier in zip(components, multipliers))
 
-
-def get_rgb_mult(segment, video_data):
-    return get_inherited_value('rgb_mult', segment, video_data)
-
-
-def get_watermark_filename(segment, video_data):
-    return get_inherited_value('watermark_filename', segment, video_data, None)
-
-
-# watermark has its aspect ratio preserved
-def get_watermark_height(segment, video_data):
-    return get_inherited_value('watermark_height', segment, video_data, 225)
-
-
-def get_watermark_position(segment, video_data):
-    return get_inherited_value('watermark_position', segment, video_data, ("left", "top"))
-
-
-def get_fade_mode(segment, video_data):
-    return get_inherited_value('fade_mode', segment, video_data, False)
-
-
-def get_fade_duration(segment, video_data):
-    return get_inherited_value('fade_duration', segment, video_data, -1)
-
-
-def get_temp_transpose_xy_size(segment, video_data):
-    return get_inherited_value('temp_transpose_xy_size', segment, video_data, False)
-
-
-def get_grab_frame(segment):
-    return segment.get('grab_frame')
+    return total_seconds
 
 
 def load_image(image_path, rgb_mult = None):
@@ -151,37 +156,6 @@ def calc_watermark_position(video_clip_rect, watermark_size, watermark_position,
     return (x + segment_offset_inside_context['x'], y + segment_offset_inside_context['y'])
 
 
-# Convert "h:m:s" to seconds, with all components apart from seconds optional.
-# i.e. can be "m:s" or just "s". The numbers are floats, so can use e.g. "1.5" for seconds.
-# If you want frames, use e.g. "6+4/30", which means 6 + 4/30 secs.
-# If the denominator is 30, you can just write "6+4" as a shortcut.
-def time_to_seconds(time_string):
-    components = time_string.split(':')
-
-    # interpret the seconds
-    if '+' in components[-1]:
-        if '/' in components[-1]:
-            int_part, fraction_part = components[-1].split('+')
-            numerator, denominator = map(float, fraction_part.split('/'))
-        else:
-            int_part, fraction_part = components[-1].split('+')
-            numerator = float(fraction_part)
-            denominator = 30.0
-
-        seconds = float(int_part) + numerator / denominator
-    else:
-        seconds = float(components[-1])
-
-    # interpret the minutes and hours
-    components = components[:-1] + [seconds]
-    components = list(map(float, components))[::-1]
-    multipliers = [1, 60, 3600]  # Seconds, Minutes, Hours
-
-    total_seconds = sum(component * multiplier for component, multiplier in zip(components, multipliers))
-
-    return total_seconds
-
-
 # print(time_to_seconds("02"))
 # print(time_to_seconds("2.0"))
 # print(time_to_seconds("00:30:02.1"))
@@ -232,10 +206,14 @@ def apply_watermark(clip, clip_rect, clip_offset_in_context, segment, video_data
 # segment_clip_rect the segment's own clip rect as per toml.
 def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segment_clip_rect):
     # filename without extension
-    video_base_filename = os.path.splitext(video_path)[0]
+    # video_base_filename = os.path.splitext(os.path.basename(video_path))[0]
+    video_base_filename = os.path.basename(video_path)
 
-    # output_filename = f'{toml_base_filename}__{video_base_filename}__seg{idx:04d}__{desc}{"__concat" if make_concatenation_video else ""}.mp4'
-    output_filename = f'{toml_base_filename}__{video_path}__seg{idx:04d}__{desc}{"__concat" if make_concatenation_video else ""}.mp4'
+    output_filename = f'{toml_base_filename}__{video_base_filename}__seg{idx:04d}__{desc}{"__concat" if make_concatenation_video else ""}.mp4'
+    # output_filename = f'{toml_base_filename}__{video_path}__seg{idx:04d}__{desc}{"__concat" if make_concatenation_video else ""}.mp4'
+
+    print(f"   video_base_filename = {video_base_filename}")
+    print(f"Made output_filename = {output_filename}")
 
     if os.path.isfile(output_filename) and not force_overwrite_existing:
         if make_concatenation_video:
@@ -244,18 +222,22 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
         print(f"File {output_filename} already exists, skipping...")
         return
 
-
     video_clip = VideoFileClip(video_path)
 
-    # herus
     if grab_frame := get_grab_frame(segment):
         print(f"found a grab_frame: {grab_frame}")
         # Convert the frame to an ImageClip
         
         frame = video_clip.get_frame(grab_frame['time']) 
+
         clip = ImageClip(frame, duration=grab_frame['duration'])
+        # doesn't work, interacts with the xy flip further down? video corrupts as still image plays.
+        # clip = (ImageClip(frame, duration=grab_frame['duration'])
+        #     .resize(lambda t : 1+0.02*t)
+        # )
 
         # TODO get from somewhere authoritative later, e.g. the reference video clip (later)
+        # use 1 if no zoom? otherwise 30
         clip.fps = 30
 
     else:
@@ -291,6 +273,12 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
     # segment_clip_rect has the x, y we need for clip_offset_in_context
     clip = apply_watermark(clip, clip_rect, segment_clip_rect, segment, video_data)
 
+    # Zoom in over time - the image will zoom in by 5% per second
+    # zoom_in_clip = img.fx(lambda t: img.resize(1 + 0.05*t))
+
+    # Then pan from top to bottom over time
+    # pan_clip = zoom_in_clip.fx(lambda t: crop(zoom_in_clip, y1=int(50*t), y2=int(50*t) + img.size[1]))
+
     clip.write_videofile(output_filename)
 
     return clip
@@ -307,7 +295,8 @@ def process_video_toml(toml_file):
 
     # use first segment for title and hence finding res of video (assumption)
     first_segment = video_data['segments'][0]
-    video_path = get_video_filename(first_segment, video_data)
+    video_path = make_abs_path(get_video_filename(first_segment, video_data))
+    print(f"get_video_filename gave {video_path}")
 
     # does this load lots of data into memory up front? I'm guessing not.
     video_clip = VideoFileClip(video_path)
@@ -348,7 +337,8 @@ def process_video_toml(toml_file):
         # print(f"=-=-==-=   in segment bit, idx = {idx} segment = {segment}")
 
         # guess could cache the vids in memory? not sure what being automatically unloaded, anyhoo
-        video_path = get_video_filename(segment, video_data)
+        # video_path = get_video_filename(segment, video_data)
+        video_path = make_abs_path(get_video_filename(segment, video_data))
 
         # Determine fade duration from the TOML data
         # (Default to -1 second i.e. disabled if not specified)
