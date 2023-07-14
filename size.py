@@ -1,35 +1,42 @@
 # size.py
 
+from dataclasses import dataclass, field
+
+
 def clip(value, lower, upper):
-    return lower if value < lower else upper if value > upper else value
+    return lower if lower and value < lower else (upper if upper and value > upper else value)
 
 
+# min function for a ratio, with direction reversed for a < 1
 def min_ratio(a, b):
-	return min(a, b) if a > 1 else max(a, b)
+    return min(a, b) if a > 1 else max(a, b)
 
 
+# max function for a ratio, with direction reversed for a < 1
 def max_ratio(a, b):
-	return max(a, b) if a > 1 else min(a, b)
+    return max(a, b) if a > 1 else min(a, b)
 
 
+@dataclass(frozen=True, order=True)
 class Size:
-    def __init__(self, width, height):
-        self.width = float(width)
-        self.height = float(height)
+    width: float
+    height: float
+    aspect_ratio: float
+    area: float
 
 
-    def aspect_ratio(self):
-        return self.width / self.height
+    @classmethod
+    def make(cls, width: float, height: float):
+        return cls(
+            width,
+            height,
+            width / height if height != 0 else None,
+            width * height
+        )
 
 
-    def scale(self, factor):
-        self.width *= factor
-        self.height *= factor
-        return self
-
-
-    def scaled(factor):
-    	return Size(self.width * scale_factor, self.height * scale_factor)
+    def scaled(self, factor):
+        return Size.make(self.width * factor, self.height * factor)
 
 
     def scaled_to(self, other_size, ratio_choose_func, z_min=None, z_max=None):
@@ -40,6 +47,14 @@ class Size:
         return self.scaled(scale_factor)
 
 
+    def aspect_fitted_to(self, other_size):
+        return self.scaled_to(other_size, min_ratio)
+
+
+    def aspect_filled_to(self, other_size):
+        return self.scaled_to(other_size, max_ratio)
+
+
     def __str__(self):
-        return f"Size({self.width}, {self.height})"
+        return f"Size({self.width}, {self.height}, aspect: {self.aspect_ratio}, area: {self.area})"
 

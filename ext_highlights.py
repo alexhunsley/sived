@@ -29,6 +29,16 @@ from .spec import *
 from .helpers import *
 from .image import *
 from .time import *
+from .size import *
+
+
+s1 = Size.make(10, 10)
+s2 = Size.make(50, 100)
+print(f"s1 = {s1}")
+print(f"s2 = {s2}")
+print(f"s1.fill(s2) = {s1.aspect_filled_to(s2)}")
+print(f"s1.fit(s2) = {s1.aspect_fitted_to(s2)}")
+sys.exit(0)
 
 # script_dir = os.path.abspath(os.path.dirname(__file__))
 # working_dir = os.getcwd()
