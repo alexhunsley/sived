@@ -1,4 +1,8 @@
+# toml spec helper
+#
+
 import toml
+
 
 def get_inherited_value(key, segment, video_data, default_value=None):
     return segment.get(key, video_data.get(key, default_value))
@@ -46,8 +50,8 @@ def get_temp_transpose_xy_size(segment, video_data):
 
 def get_grab_frame(segment):
     if grab_frame := segment.get('grab_frame'):
-        print(f"got grab_frame BEFORE: {grab_frame}")
+        # print(f"got grab_frame BEFORE: {grab_frame}")
         grab_frame['time'] = time_to_seconds(grab_frame['time'])
-        print(f"got grab_frame AFTER: {grab_frame}")
+        # print(f"got grab_frame AFTER: {grab_frame}")
 
     return grab_frame
