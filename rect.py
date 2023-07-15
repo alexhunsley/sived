@@ -1,13 +1,20 @@
 # rect.py
 
+from dataclasses import dataclass
 
+@dataclass(frozen=True, order=True)
 class Rect:
+
 
     def __init__(self, x, y, end_x, end_y):
         self.x = float(x)
         self.y = float(y)
         self.end_x = float(end_x)
         self.end_y = float(end_y)
+        self.aspect_ratio = self.width() / self.height() if self.height() != 0 else None
+        self.centre = (self.x + self.width() / 2, self.y + self.height() / 2)
+        self.width = self.end_x - self.x
+        self.height = self.end_y - self.y
 
 
     def width(self):
@@ -16,16 +23,6 @@ class Rect:
 
     def height(self):
         return self.end_y - self.y
-
-
-    def centre(self):
-        centre_x = self.x + self.width() / 2
-        centre_y = self.y + self.height() / 2
-        return centre_x, centre_y
-
-
-    def aspect_ratio(self):
-        return self.width() / self.height()
 
 
     def match_centre(self, other_rect):
@@ -53,7 +50,7 @@ class Rect:
         self.end_y = cy + half_height
 
 
-    def move_minimally_to_lie_inside(self, other_rect):
+    def moved_minimally_to_lie_inside(self, other_rect):
         if self.width() > other_rect.width() or self.height() > other_rect.height():
             raise ValueError("Receiver rectangle is larger than the other rectangle.")
         
