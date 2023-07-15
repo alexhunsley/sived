@@ -13,21 +13,21 @@ class Maths:
         return lower if lower and value < lower else (upper if upper and value > upper else value)
 
 
-    # min function for a ratio, with direction reversed for a < 1.
+    # min function for a ratio, i.e. min/max direction reversed for a < 1.
     # this handles cases where the ratios are on different sides of 1.
     @classmethod
     def min_ratio(cls, a, b):
         # If ratios straddle 1, ensure a is the ratio <1
         a, b = min(a, b), max(a, b)
-        return min(a, b) if a >= 1 else max(a, b)
+        return max(a, b) if a < 1 and b < 1 else min(a, b)
 
 
-    # max function for a ratio, with direction reversed for a < 1
+    # max function for a ratio, i.e. direction reversed for a < 1
     @classmethod
     def max_ratio(cls, a, b):
         # If ratios straddle 1, ensure a is the ratio <1
         a, b = min(a, b), max(a, b)
-        return max(a, b) if a >= 1 else min(a, b)
+        return min(a, b) if a < 1 and b < 1 else max(a, b)
 
 
 class TestMaths(unittest.TestCase):
@@ -46,19 +46,27 @@ class TestMaths(unittest.TestCase):
         self.assertEqual(Maths.clip(5, 6, 10), 6)
         self.assertEqual(Maths.clip(5, 1, 4), 4)
         self.assertEqual(Maths.clip(5, None, None), 5)
+        self.assertEqual(Maths.clip(-5, None, None), -5)
+
 
     def test_min_ratio(self):
         self.assertEqual(Maths.min_ratio(2, 3), 2)
         self.assertEqual(Maths.min_ratio(0.5, 0.3), 0.5)
-        self.assertEqual(Maths.min_ratio(1, 0.5), 1)
+        self.assertEqual(Maths.min_ratio(1, 0.5), 0.5)
         self.assertEqual(Maths.min_ratio(1, 1.5), 1)
+        self.assertEqual(Maths.min_ratio(0.5, 1.5), 0.5)
+        self.assertEqual(Maths.min_ratio(1.5, 0.5), 0.5)
+        self.assertEqual(Maths.min_ratio(1, 1), 1)
 
 
     def test_max_ratio(self):
         self.assertEqual(Maths.max_ratio(2, 3), 3)
         self.assertEqual(Maths.max_ratio(0.5, 0.3), 0.3)
-        self.assertEqual(Maths.max_ratio(1, 0.5), 0.5)
+        self.assertEqual(Maths.max_ratio(1, 0.5), 1)
         self.assertEqual(Maths.max_ratio(1, 1.5), 1.5)
+        self.assertEqual(Maths.max_ratio(0.5, 1.5), 1.5)
+        self.assertEqual(Maths.max_ratio(1.5, 0.5), 1.5)
+        self.assertEqual(Maths.max_ratio(1, 1), 1)
 
 
 if __name__ == '__main__':

@@ -1,5 +1,6 @@
 # size.py
 
+import unittest
 from dataclasses import dataclass, field
 from .maths import Maths
 
@@ -44,4 +45,58 @@ class Size:
 
     def __str__(self):
         return f"Size({self.width}, {self.height}, aspect: {self.aspect_ratio}, area: {self.area})"
+
+
+class TestSize(unittest.TestCase):
+    def test_make(self):
+        s = Size.make(2.0, 3.0)
+        self.assertEqual(s.width, 2.0)
+        self.assertEqual(s.height, 3.0)
+        self.assertEqual(s.aspect_ratio, 2.0 / 3.0)
+        self.assertEqual(s.area, 2.0 * 3.0)
+
+
+    def test_scaled(self):
+        s = Size.make(2.0, 3.0)
+        scaled_s = s.scaled(2.0)
+        self.assertEqual(scaled_s.width, 4.0)
+        self.assertEqual(scaled_s.height, 6.0)
+
+
+    def test_scaled_to_min(self):
+        s1 = Size.make(2.0, 1.0)
+        s2 = Size.make(6.0, 2.0)
+        # in effect, aspect fit
+        scaled_s = s1.scaled_to(s2, Maths.min_ratio)
+        self.assertEqual(scaled_s.width, 4.0)
+        self.assertEqual(scaled_s.height, 2.0)
+
+
+    def test_scaled_to_max(self):
+        s1 = Size.make(2.0, 1.0)
+        s2 = Size.make(6.0, 2.0)
+        # in effect, aspect fill
+        scaled_s = s1.scaled_to(s2, Maths.max_ratio)
+        self.assertEqual(scaled_s.width, 6.0)
+        self.assertEqual(scaled_s.height, 3.0)
+
+
+    def test_aspect_fitted_to(self):
+        s1 = Size.make(2.0, 1.0)
+        s2 = Size.make(6.0, 2.0)
+        fitted_s = s1.aspect_fitted_to(s2)
+        self.assertEqual(fitted_s.width, 4.0)
+        self.assertEqual(fitted_s.height, 2.0)
+
+
+    def test_aspect_filled_to(self):
+        s1 = Size.make(2.0, 1.0)
+        s2 = Size.make(6.0, 2.0)
+        fitted_s = s1.aspect_filled_to(s2)
+        self.assertEqual(fitted_s.width, 6.0)
+        self.assertEqual(fitted_s.height, 3.0)
+
+
+if __name__ == '__main__':
+    unittest.main()
 
