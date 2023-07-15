@@ -43,6 +43,20 @@ class Size:
         return self.scaled_to(other_size, Maths.max_ratio)
 
 
+    def __lt__(self, other):
+        if isinstance(other, Size):
+            return self.width < other.width and self.height < other.height
+        else:
+            raise TypeError("__lt__: Unsupported comparison between instances of 'Size' and '{}'".format(type(other).__name__))
+
+
+    def __gt__(self, other):
+        if isinstance(other, Size):
+            return self.width > other.width and self.height > other.height
+        else:
+            raise TypeError("__gt__: Unsupported comparison between instances of 'Size' and '{}'".format(type(other).__name__))
+
+
     def __str__(self):
         return f"Size({self.width}, {self.height}, aspect: {self.aspect_ratio}, area: {self.area})"
 
