@@ -5,9 +5,9 @@ import toml
 from moviepy.editor import *
 from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 from moviepy.video.io.VideoFileClip import VideoFileClip
-from moviepy.video.VideoClip import ImageClip
-from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
-from moviepy.video.fx.all import crop, resize, rotate
+# from moviepy.video.VideoClip import ImageClip
+# from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
+# from moviepy.video.fx.all import crop, resize, rotate
 from moviepy.editor import concatenate_videoclips
 from moviepy.video.fx.all import fadein, fadeout
 from moviepy.video.VideoClip import ColorClip
@@ -22,8 +22,21 @@ from moviepy.video.VideoClip import ColorClip
 #
 # or add that above dir to pythonpath by running this in this dir:
 #
-# export PYTHONPATH=`cd ..;pwd`
+#   export PYTHONPATH=`cd ..:pwd`
 #
+# NB must use ':' not ';' for separator here!
+#
+# input files are looked for relative to working dir, as you'd expected.
+# should output file rel path be relative to working dir, or to vid input dir?
+# I think the former -- might have different video input dirs, after all.
+#
+
+toml_base_filename = None
+
+make_concatenation_video = True
+force_overwrite_existing = True
+
+working_dir = os.getcwd()
 
 from .spec import *
 from .helpers import *
@@ -32,13 +45,13 @@ from .time import *
 from .size import *
 
 
-s1 = Size.make(10, 10)
-s2 = Size.make(50, 100)
-print(f"s1 = {s1}")
-print(f"s2 = {s2}")
-print(f"s1.fill(s2) = {s1.aspect_filled_to(s2)}")
-print(f"s1.fit(s2) = {s1.aspect_fitted_to(s2)}")
-sys.exit(0)
+# s1 = Size.make(10, 10)
+# s2 = Size.make(50, 100)
+# print(f"s1 = {s1}")
+# print(f"s2 = {s2}")
+# print(f"s1.fill(s2) = {s1.aspect_filled_to(s2)}")
+# print(f"s1.fit(s2) = {s1.aspect_fitted_to(s2)}")
+# sys.exit(0)
 
 # script_dir = os.path.abspath(os.path.dirname(__file__))
 # working_dir = os.getcwd()
@@ -55,10 +68,6 @@ sys.exit(0)
 # Way to pull a still image from a video and make duration clip from that.
 #
 
-toml_base_filename = None
-
-make_concatenation_video = True
-force_overwrite_existing = True
 
 
 # clip_rect is for just this segment. It might be actual seg rect or the union'd rect.
@@ -66,6 +75,9 @@ force_overwrite_existing = True
 def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segment_clip_rect):
     # filename without extension
     # video_base_filename = os.path.splitext(os.path.basename(video_path))[0]
+
+    print(f"   passed video_path = {video_path}")
+
     video_base_filename = os.path.basename(video_path)
 
     output_filename = f'{toml_base_filename}__{video_base_filename}__seg{idx:04d}__{desc}{"__concat" if make_concatenation_video else ""}.mp4'
@@ -154,7 +166,12 @@ def process_video_toml(toml_file):
 
     # use first segment for title and hence finding res of video (assumption)
     first_segment = video_data['segments'][0]
-    video_path = make_abs_path(get_video_filename(first_segment, video_data))
+
+    # wrong! want rel to curr dir.
+    video_path = make_abs_path_rel_to_working_dir(get_video_filename(first_segment, video_data))
+
+    print(f"working dir: {os.getcwd()}")
+
     print(f"get_video_filename gave {video_path}")
 
     # does this load lots of data into memory up front? I'm guessing not.
@@ -197,7 +214,7 @@ def process_video_toml(toml_file):
 
         # guess could cache the vids in memory? not sure what being automatically unloaded, anyhoo
         # video_path = get_video_filename(segment, video_data)
-        video_path = make_abs_path(get_video_filename(segment, video_data))
+        video_path = make_abs_path_rel_to_working_dir(get_video_filename(segment, video_data))
 
         # Determine fade duration from the TOML data
         # (Default to -1 second i.e. disabled if not specified)

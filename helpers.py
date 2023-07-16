@@ -3,6 +3,8 @@
 import os
 import re
 
+from .ext_highlights import working_dir
+
 
 def dbg(string):
     pass
@@ -17,9 +19,13 @@ def error(string):
     print(f"\n ERROR: {string}")
 
 
-def make_abs_path(rel_path):
+def make_abs_path_to_script_dir(rel_path):
     script_dir = os.path.dirname(__file__)
     return os.path.normpath(os.path.join(script_dir, rel_path))
+
+
+def make_abs_path_rel_to_working_dir(rel_path):
+    return os.path.normpath(os.path.join(working_dir, rel_path))
 
 
 def sanitize_filename(filename):

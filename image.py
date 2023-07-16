@@ -1,6 +1,10 @@
 # image.py
 
 from .spec import *
+from .ext_highlights import make_concatenation_video
+from moviepy.video.VideoClip import ImageClip
+from moviepy.video.fx.all import crop, resize, rotate
+from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 
 
 def load_image(image_path, rgb_mult = None):
@@ -70,8 +74,9 @@ def calc_watermark_position(video_clip_rect, watermark_size, watermark_position,
     elif watermark_position[1] == "top":
         y = 0
 
-    # print(f"  >>>> get_watermark_position: to xy of {x} {y} am adding segment_offset_inside_context = {segment_offset_inside_context}")
-    return (x + segment_offset_inside_context['x'], y + segment_offset_inside_context['y'])
+    watermark_pos = (x + segment_offset_inside_context['x'], y + segment_offset_inside_context['y'])
+    print(f"  >>>> get_watermark_position: to xy of {x} {y} am adding segment_offset_inside_context = {segment_offset_inside_context}, final: watermark_pos")
+    return watermark_pos
 
 
 # print(time_to_seconds("02"))
@@ -87,9 +92,14 @@ def calc_watermark_position(video_clip_rect, watermark_size, watermark_position,
 # applies a watermark if necessary, returning the resulting clip (or the original clip otherwise)
 def apply_watermark(clip, clip_rect, clip_offset_in_context, segment, video_data):
 
+    print(f"  >>>> apply_watermark: {clip} {clip_rect} {clip_offset_in_context}")
+
+    # global make_concatenation_video
+
     watermark_filename = get_watermark_filename(segment, video_data)
 
     if watermark_filename is None:
+        print(f"  >>>> apply_watermark: early bail, no filename")
         return clip
 
     rgb_mult = get_rgb_mult(segment, video_data)
