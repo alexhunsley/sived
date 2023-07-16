@@ -12,6 +12,7 @@ from moviepy.editor import concatenate_videoclips
 from moviepy.video.fx.all import fadein, fadeout
 from moviepy.video.VideoClip import ColorClip
 
+
 # This works for local run from command line: 
 #
 # In dir above:
@@ -38,12 +39,21 @@ force_overwrite_existing = True
 
 working_dir = os.getcwd()
 
+limit_segs = None
+
+
 from .spec import *
 from .helpers import *
 from .image import *
 from .time import *
 from .size import *
 
+
+# idea:
+# allow nested alternating h/v style: like "h=a.png=(b.png=c.png=(d.png=e.png))", where each
+# bracket flips the direction and recursively calls same func
+
+# add text
 
 # s1 = Size.make(10, 10)
 # s2 = Size.make(50, 100)
@@ -156,7 +166,6 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
 
 
 def process_video_toml(toml_file):
-    global toml_base_filename
     toml_base_filename = toml_file
 
     with open(toml_file, 'r') as f:
@@ -164,11 +173,14 @@ def process_video_toml(toml_file):
 
     video_data = data['video'][0]
 
+    if limit_segs:
+        video_data['segments'] = video_data['segments'][:limit_segs]
+
     # use first segment for title and hence finding res of video (assumption)
     first_segment = video_data['segments'][0]
 
     # wrong! want rel to curr dir.
-    video_path = make_abs_path_rel_to_working_dir(get_video_filename(first_segment, video_data))
+    video_path = make_abs_path_rel_to_working_dir(get_video_filename(first_segment, video_data, toml_file))
 
     print(f"working dir: {os.getcwd()}")
 
@@ -214,7 +226,7 @@ def process_video_toml(toml_file):
 
         # guess could cache the vids in memory? not sure what being automatically unloaded, anyhoo
         # video_path = get_video_filename(segment, video_data)
-        video_path = make_abs_path_rel_to_working_dir(get_video_filename(segment, video_data))
+        video_path = make_abs_path_rel_to_working_dir(get_video_filename(segment, video_data, toml_file))
 
         # Determine fade duration from the TOML data
         # (Default to -1 second i.e. disabled if not specified)
@@ -262,6 +274,7 @@ if __name__ == "__main__":
     if sys.argv[1] == 'all':
         toml_files = glob.glob("*.toml")
         for toml_file in toml_files:
+            print(f" doing toml_file_global file: {toml_file_global}")
             process_video_toml(toml_file)
     # Otherwise, process the specified TOML file
     else:

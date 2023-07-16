@@ -8,13 +8,13 @@ def get_inherited_value(key, segment, video_data, default_value=None):
     return segment.get(key, video_data.get(key, default_value))
 
 
-def get_video_filename(segment, video_data):
+def get_video_filename(segment, video_data, toml_filename):
 
     video_path = get_inherited_value('video_filename', segment, video_data, None)
 
     if video_path is None:
         # default to mp4 file with same name as toml
-        video_path = f"{toml_file.split('.')[0]}.mp4"
+        video_path = f"{toml_filename.split('.')[0]}.mp4"
 
     return video_path
 

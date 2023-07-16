@@ -1,7 +1,7 @@
 [[video]]
 video_filename = "output_green.mp4"
-watermark_filename = "watermark_sample.png"
-watermark_height = 100
+watermark_filename = "h=watermark_sample.png=watermark_sample2.png"
+watermark_height = 120
 watermark_position = [0, 0]
 desc = "green test"
 
