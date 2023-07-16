@@ -13,15 +13,9 @@ clip_rect = { x = 50, y = 50, end_x = 430, end_y = 220 }
 tags = ["tag1", "tag2"]
 desc = "green test1"
 
-[[video.segments]]
-# only start time, so end at clip end
-start_time = "00:59:57"
-clip_rect = { x = 100, y = 50, end_x = 380, end_y = 220 }
-tags = ["tag3"]
-desc = "green test2"
-
 # [[video.segments]]
-# # no start or end time, so whole clip
+# # only start time, so end at clip end
+# start_time = "00:59:57"
 # clip_rect = { x = 100, y = 50, end_x = 380, end_y = 220 }
 # tags = ["tag3"]
-# desc = "green test3"
+# desc = "green test2"

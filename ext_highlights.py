@@ -32,6 +32,8 @@ from moviepy.video.VideoClip import ColorClip
 # I think the former -- might have different video input dirs, after all.
 #
 
+# is desc not in the concat?
+
 toml_base_filename = None
 
 make_concatenation_video = True
@@ -166,6 +168,7 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
 
 
 def process_video_toml(toml_file):
+    global toml_base_filename
     toml_base_filename = toml_file
 
     with open(toml_file, 'r') as f:
@@ -202,6 +205,9 @@ def process_video_toml(toml_file):
     # max_clip_rect = {'x': video_size[0], 'y': video_size[1], 'end_x': 0, 'end_y': 0} if make_concatenation_video else  {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]}
     max_clip_rect = {'x': video_size[0], 'y': video_size[1], 'end_x': 0, 'end_y': 0}
 
+    global make_concatenation_video
+    make_concatenation_video = make_concatenation_video and len(video_data['segments']) > 1
+
     # print(f"=-=-==-=   max_clip_rect = {max_clip_rect}")
 
     if make_concatenation_video:
@@ -228,12 +234,6 @@ def process_video_toml(toml_file):
         # video_path = get_video_filename(segment, video_data)
         video_path = make_abs_path_rel_to_working_dir(get_video_filename(segment, video_data, toml_file))
 
-        # Determine fade duration from the TOML data
-        # (Default to -1 second i.e. disabled if not specified)
-        fade_duration = get_fade_duration(segment, video_data)
-        fade_mode = get_fade_mode(segment, video_data)
-
-        print(f"  =--=-==-=-= fade_mode = {fade_mode} fade_duration = {fade_duration} ")
         segment_clip_rect = segment.get('clip_rect', {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]})
         use_clip_rect = max_clip_rect if make_concatenation_video == True else segment_clip_rect
 
@@ -242,7 +242,12 @@ def process_video_toml(toml_file):
         output_clip = process_segment(video_path, idx, segment['desc'], segment, video_data, use_clip_rect, segment_clip_rect) #, max_clip_rect if make_concatenation_video else None)
 
         if make_concatenation_video:
-            print(f"fade_duration = {fade_duration}")
+            # Determine fade duration from the TOML data
+            # (Default to -1 second i.e. disabled if not specified)
+            fade_duration = get_fade_duration(segment, video_data)
+            fade_mode = get_fade_mode(segment, video_data)
+            print(f"  =--=-==-=-= fade_mode = {fade_mode} fade_duration = {fade_duration} ")
+
             if fade_duration > 0 and fade_mode:
                 print(f" ... so applying crossfade in and out")
 
