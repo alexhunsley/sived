@@ -27,11 +27,14 @@ from moviepy.video.fx.all import fadein, fadeout
 
 # new from gpt:
 
+from .helpers import dbg
+
 from typing import List, Tuple, Union
 import re
 
 
 def split_spec(spec: str) -> List[str]:
+    dbg(f"split_spec: spec= {spec}")
     """Split an image spec into elements, which are either image filenames or sub-specs."""
     elements = []
     buffer = ""
@@ -39,15 +42,26 @@ def split_spec(spec: str) -> List[str]:
 
     for char in spec:
         if char == "(":
-            if paren_depth == 0 and buffer.strip(): # If it is the start of sub-spec, append the buffer into elements.
-                elements.append(buffer.strip())
-                buffer = ""
+            print(f"Found '(', buffer.strip() = {buffer.strip()}")
+            if paren_depth == 0:
+                if buffer.strip(): # If it is the start of sub-spec, append the buffer into elements.
+                    print(f"    ... paren_depth = 0 and have buffer contents, so appending |{buffer.strip()}|")
+                    elements.append(buffer.strip())
+                    buffer = ""
+            else:
+                print(f"    ... paren_depth != 0 OR have no buffer contents, so appending (. paren_depth = {paren_depth}")
+                buffer += "("
             paren_depth += 1
         elif char == ")":
             paren_depth -= 1
+            print(f" ... found a ) and paren_depth now = {paren_depth}")
             if paren_depth == 0: # If it is the end of sub-spec, append the buffer into elements.
-                elements.append(buffer.strip())
+                # elements.append(f"({buffer.strip()})")
+                elements.append(f"{buffer.strip()}")
+                # elements.append(f"{buffer.strip()})")
                 buffer = ""
+            else:
+                buffer += ")"
         elif char == "=" and paren_depth == 0: # split on "=" outside parentheses.
             if buffer.strip(): # append buffer into elements.
                 elements.append(buffer.strip())
@@ -58,10 +72,17 @@ def split_spec(spec: str) -> List[str]:
     if buffer.strip(): # Append the leftover buffer into elements.
         elements.append(buffer.strip())
 
+    dbg(f"split_spec: returning elements = {elements}")
     return elements
 
 
+# spec_result = split_spec("h=1=(2=3=((4)=5))")
+# print(f"split spec test: {spec_result}")
+# sys.exit(0)
+
+
 def process_spec(spec: str, max_dimension: int, layout: str = None) -> Image:
+    dbg(f"  PROCESS_SPEC called, max_dimension = {max_dimension}")
     """Process an image spec, returning an image.
     The spec can contain sub-specs in parentheses, which will be processed recursively.
     """
@@ -73,16 +94,27 @@ def process_spec(spec: str, max_dimension: int, layout: str = None) -> Image:
 
     images = []
     for el in elements:
-        if "=" in el:  # This is a sub-spec
+        # sub-specs can be like 'a=b' or '(a)' or 'a=(b=c)'
+        if "(" in el or "=" in el:
             sub_layout = 'v' if layout == 'h' else 'h'  # Flip layout for sub-spec
-            images.append(process_spec(el, max_dimension, sub_layout))
+            dbg(f"   --- calling process_spec on a sublayout = {el}, before that images = {images}")
+
+            sub_spec_image = process_spec(el, max_dimension, sub_layout)
+            sub_spec_image = resized_image(sub_spec_image, max_dimension, layout)
+
+            images.append(sub_spec_image)
+            dbg(f"   ---    .... now images = {images}")
+
         else:  # This is an image file
             images.append(load_single_image(el, max_dimension))
 
     # Get canvas size
     max_width, max_height = get_canvas_size(images, max_dimension, layout)
 
+    dbg(f"  -=-= max_w and h: {max_width} {max_height}")
     # Create new canvas
+
+    # this shows the missing image with height * 2. The sub-images aren't being resized...
     canvas = Image.new('RGB', (max_width, max_height))
 
     # Paste images onto canvas
@@ -127,13 +159,26 @@ def load_and_resize_images(image_files, max_dimension, layout):
     images = []
     for img in image_files:
         image = Image.open(img)
-        aspect_ratio = image.width / image.height
-        if layout == 'h':
-            new_size = (int(max_dimension * aspect_ratio), max_dimension)
-        else:
-            new_size = (max_dimension, int(max_dimension / aspect_ratio))
-        images.append(image.resize(new_size, Image.ANTIALIAS))
+
+        images.append(resized_image(image, max_dimension, Image.ANTIALIAS))
+
+        # aspect_ratio = image.width / image.height
+        # if layout == 'h':
+        #     new_size = (int(max_dimension * aspect_ratio), max_dimension)
+        # else:
+        #     new_size = (max_dimension, int(max_dimension / aspect_ratio))
     return images
+
+
+def resized_image(image, max_dimension, layout):
+    aspect_ratio = image.width / image.height
+    if layout == 'h':
+        new_size = (int(max_dimension * aspect_ratio), max_dimension)
+    else:
+        new_size = (max_dimension, int(max_dimension / aspect_ratio))
+
+    image = image.resize(new_size, Image.ANTIALIAS)
+    return image
 
 
 def get_canvas_size(images, max_dimension, layout):
