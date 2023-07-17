@@ -1,17 +1,21 @@
 [[video]]
-video_filename = "output_green.mp4"
-# watermark_filename = "h=watermark_sample.png=(watermark_sample2.png=watermark_sample3.png)"
-watermark_filename = "h=watermark_sample.png=(watermark_sample2.png=(watermark_sample3.png=watermark_sample4.png))=watermark_sample4.png"
-# watermark_filename = "h=watermark_sample.png=(watermark_sample2.png=watermark_sample3.png)"
-watermark_height = 120
+# video_filename = "output_green.mp4"
+video_filename = "output_blue_larger_res.mp4"
+# watermark_filename = "h=watermark_sample.png=(watermark_sample2.png=(watermark_sample3.png=watermark_sample4.png))=watermark_sample4.png"
+# watermark_filename = "v=((watermark_sample.png=watermark_sample2.png)=(watermark_sample3.png=watermark_sample4.png)=watermark_sample3.png)=watermark_sample2.png"
+# watermark_filename = "h=(watermark_sample.png=watermark_sample3b.png)=(watermark_sample2b.png=(watermark_sample4b.png=watermark_sample3b.png)"
+# watermark_filename = "h=(watermark_sample.png=watermark_sample2b.png)"
+# watermark_filename = "h=watermark_sample.png=watermark_sample2b.png"
+watermark_filename = "h=(grid1.png=grid2.png)=(grid3.png=(grid4.png=grid1.png=grid2.png))"
+watermark_height = 400
 watermark_position = [0, 0]
 desc = "green test"
 
 
 [[video.segments]]
 # only end time, so start at clip start
-end_time = "00:00:03"
-clip_rect = { x = 50, y = 50, end_x = 430, end_y = 220 }
+end_time = "00:00:30"
+# clip_rect = { x = 50, y = 50, end_x = 430, end_y = 220 }
 tags = ["tag1", "tag2"]
 desc = "green test1"
 

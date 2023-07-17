@@ -21,16 +21,12 @@ from moviepy.video.fx.all import fadein, fadeout
 #
 # IMAGE STACKING from gpt
 
-
-# from PIL import Image
-
-
-# new from gpt:
-
 from .helpers import dbg
-
 from typing import List, Tuple, Union
 import re
+
+
+border = 4
 
 
 def split_spec(spec: str) -> List[str]:
@@ -106,7 +102,15 @@ def process_spec(spec: str, max_dimension: int, layout: str = None) -> Image:
             dbg(f"   ---    .... now images = {images}")
 
         else:  # This is an image file
-            images.append(load_single_image(el, max_dimension))
+
+            # wrong order! add border after resize!
+            image = load_single_image(el, max_dimension)
+            # this is weird somehow.
+            image = resized_image(image, max_dimension, layout)
+
+            # kinda works, but resizing of sub things means you can't keep border sizes 'neat' and same as each other.
+            # image = add_border(image, 30)
+            images.append(image)
 
     # Get canvas size
     max_width, max_height = get_canvas_size(images, max_dimension, layout)
@@ -143,7 +147,19 @@ def load_stacked_image_as_clip(image_spec: str, watermark_max_dimension: int, rg
 
 
 # ==========================================
-def load_single_image(image_file, max_dimension):
+
+
+def add_border(image, border):
+    if not border: 
+        return Image
+
+    borderImage = Image.new(image.mode, (image.width + border*2, image.height + border * 2), '#000')
+    borderImage.paste(image, (border, border))
+
+    return borderImage
+
+
+def load_single_image(image_file, max_dimension, border = None):
     print(f"load_single_image: max_dimension = {max_dimension}")
 
     image = Image.open(image_file)
@@ -152,22 +168,14 @@ def load_single_image(image_file, max_dimension):
         new_size = (max_dimension, int(max_dimension / aspect_ratio))
     else:
         new_size = (int(max_dimension * aspect_ratio), max_dimension)
-    return image.resize(new_size, Image.ANTIALIAS)
+    
+    image = image.resize(new_size, Image.ANTIALIAS)
 
+    return image
 
-def load_and_resize_images(image_files, max_dimension, layout):
-    images = []
-    for img in image_files:
-        image = Image.open(img)
-
-        images.append(resized_image(image, max_dimension, Image.ANTIALIAS))
-
-        # aspect_ratio = image.width / image.height
-        # if layout == 'h':
-        #     new_size = (int(max_dimension * aspect_ratio), max_dimension)
-        # else:
-        #     new_size = (max_dimension, int(max_dimension / aspect_ratio))
-    return images
+    # TODO why this borken?
+    # return add_border(image, border)
+    
 
 
 def resized_image(image, max_dimension, layout):
@@ -203,79 +211,7 @@ def paste_images_on_canvas(images, canvas, layout):
     return canvas
 
 
-# def load_image(image_path, rgb_mult = None):
-# def load_stacked_image_as_clip(image_spec, watermark_max_dimension, rgb_mult = None):
-#     print(f"start new version of load_stacked_image_as_clip")
-
-#     image_files = image_spec.split('=')
-
-#     layout = image_files[0] if len(image_files) > 1 else None
-
-#     print(f"load_stacked_image_as_clip: watermark_max_dimension = {watermark_max_dimension} spec = {image_spec} image_files = {image_files} layout = {layout}")
-
-#     if layout not in ('h', 'v', None):
-#         raise ValueError(f'Invalid layout: {layout}')
-
-#     if layout is None:  # Single image
-#         image = load_single_image(image_files[0], watermark_max_dimension)
-#         print(f" >> single image, got im: {image}")
-#     else:
-#         # Multiple images
-#         images = load_and_resize_images(image_files[1:], watermark_max_dimension, layout)
-
-#         # Get canvas size
-#         max_width, max_height = get_canvas_size(images, watermark_max_dimension, layout)
-
-#         # Create new canvas
-#         canvas = Image.new('RGB', (max_width, max_height))
-
-#         # Paste images into canvas
-#         image = paste_images_on_canvas(images, canvas, layout)
-#         print(f" >> multiple image, got im: {image}")
-
-
-#     # must go via np array!
-#     np_image = np.array(image)
-
-#     # Create an ImageClip with MoviePy
-#     image_clip = ImageClip(np_image)
-
-#     # print(f"made image_clip: {image_clip} from canvas (image): {canvas} with images: {images}")
-
-#     return image_clip
-
-
-# ---------------------------------------------------------------------------------------------------------------------
-
-
-
-# def load_image(image_path, rgb_mult = None):
-#     if rgb_mult == None:
-#         return ImageClip(image_path)
-
-#     (r_mul, g_mul, b_mul) = rgb_mult
-
-#     # Load the image
-#     image = Image.open(image_path)
-
-#     # Separate the image into individual color bands (channels)
-#     r, g, b, a = image.split()
-
-#     # Enhance the channels
-#     r = r.point(lambda i: i * r_mul)
-#     g = g.point(lambda i: i * g_mul)
-#     b = b.point(lambda i: i * b_mul)
-
-#     # Merge the channels back
-#     merged_image = Image.merge('RGB', (r, g, b))
-
-#     # PIL image to numpy array
-#     np_image = np.array(merged_image)
-
-#     # Create an ImageClip with MoviePy
-#     image_clip = ImageClip(np_image)
-
-#     return image_clip
+#======================================
 
 
 def calc_watermark_position(video_clip_rect, watermark_size, watermark_position, segment_offset_inside_context):
