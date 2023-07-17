@@ -25,6 +25,92 @@ from moviepy.video.fx.all import fadein, fadeout
 # from PIL import Image
 
 
+# new from gpt:
+
+from typing import List, Tuple, Union
+import re
+
+
+def split_spec(spec: str) -> List[str]:
+    """Split an image spec into elements, which are either image filenames or sub-specs."""
+    elements = []
+    buffer = ""
+    paren_depth = 0
+
+    for char in spec:
+        if char == "(":
+            if paren_depth == 0 and buffer.strip(): # If it is the start of sub-spec, append the buffer into elements.
+                elements.append(buffer.strip())
+                buffer = ""
+            paren_depth += 1
+        elif char == ")":
+            paren_depth -= 1
+            if paren_depth == 0: # If it is the end of sub-spec, append the buffer into elements.
+                elements.append(buffer.strip())
+                buffer = ""
+        elif char == "=" and paren_depth == 0: # split on "=" outside parentheses.
+            if buffer.strip(): # append buffer into elements.
+                elements.append(buffer.strip())
+                buffer = ""
+        else:
+            buffer += char
+
+    if buffer.strip(): # Append the leftover buffer into elements.
+        elements.append(buffer.strip())
+
+    return elements
+
+
+def process_spec(spec: str, max_dimension: int, layout: str = None) -> Image:
+    """Process an image spec, returning an image.
+    The spec can contain sub-specs in parentheses, which will be processed recursively.
+    """
+    if layout is None:  # for main spec, layout is in spec
+        layout = spec[0]
+        spec = spec[2:]
+        
+    elements = split_spec(spec)
+
+    images = []
+    for el in elements:
+        if "=" in el:  # This is a sub-spec
+            sub_layout = 'v' if layout == 'h' else 'h'  # Flip layout for sub-spec
+            images.append(process_spec(el, max_dimension, sub_layout))
+        else:  # This is an image file
+            images.append(load_single_image(el, max_dimension))
+
+    # Get canvas size
+    max_width, max_height = get_canvas_size(images, max_dimension, layout)
+
+    # Create new canvas
+    canvas = Image.new('RGB', (max_width, max_height))
+
+    # Paste images onto canvas
+    return paste_images_on_canvas(images, canvas, layout)
+
+
+def load_stacked_image_as_clip(image_spec: str, watermark_max_dimension: int, rgb_mult: float = None) -> ImageClip:
+    print(f"start new version of load_stacked_image_as_clip")
+
+    image_spec = image_spec.split('=')
+
+    layout = image_spec[0] if len(image_spec) > 1 else None
+
+    print(f"load_stacked_image_as_clip: watermark_max_dimension = {watermark_max_dimension} spec = {image_spec} layout = {layout}")
+
+    if layout not in ('h', 'v', None):
+        raise ValueError(f'Invalid layout: {layout}')
+
+    image = process_spec('='.join(image_spec[1:]), watermark_max_dimension, layout)
+
+    np_image = np.array(image)
+
+    image_clip = ImageClip(np_image)
+
+    return image_clip
+
+
+# ==========================================
 def load_single_image(image_file, max_dimension):
     print(f"load_single_image: max_dimension = {max_dimension}")
 
@@ -73,45 +159,45 @@ def paste_images_on_canvas(images, canvas, layout):
 
 
 # def load_image(image_path, rgb_mult = None):
-def load_stacked_image_as_clip(image_spec, watermark_max_dimension, rgb_mult = None):
-    print(f"start new version of load_stacked_image_as_clip")
+# def load_stacked_image_as_clip(image_spec, watermark_max_dimension, rgb_mult = None):
+#     print(f"start new version of load_stacked_image_as_clip")
 
-    image_files = image_spec.split('=')
+#     image_files = image_spec.split('=')
 
-    layout = image_files[0] if len(image_files) > 1 else None
+#     layout = image_files[0] if len(image_files) > 1 else None
 
-    print(f"load_stacked_image_as_clip: watermark_max_dimension = {watermark_max_dimension} spec = {image_spec} image_files = {image_files} layout = {layout}")
+#     print(f"load_stacked_image_as_clip: watermark_max_dimension = {watermark_max_dimension} spec = {image_spec} image_files = {image_files} layout = {layout}")
 
-    if layout not in ('h', 'v', None):
-        raise ValueError(f'Invalid layout: {layout}')
+#     if layout not in ('h', 'v', None):
+#         raise ValueError(f'Invalid layout: {layout}')
 
-    if layout is None:  # Single image
-        image = load_single_image(image_files[0], watermark_max_dimension)
-        print(f" >> single image, got im: {image}")
-    else:
-        # Multiple images
-        images = load_and_resize_images(image_files[1:], watermark_max_dimension, layout)
+#     if layout is None:  # Single image
+#         image = load_single_image(image_files[0], watermark_max_dimension)
+#         print(f" >> single image, got im: {image}")
+#     else:
+#         # Multiple images
+#         images = load_and_resize_images(image_files[1:], watermark_max_dimension, layout)
 
-        # Get canvas size
-        max_width, max_height = get_canvas_size(images, watermark_max_dimension, layout)
+#         # Get canvas size
+#         max_width, max_height = get_canvas_size(images, watermark_max_dimension, layout)
 
-        # Create new canvas
-        canvas = Image.new('RGB', (max_width, max_height))
+#         # Create new canvas
+#         canvas = Image.new('RGB', (max_width, max_height))
 
-        # Paste images into canvas
-        image = paste_images_on_canvas(images, canvas, layout)
-        print(f" >> multiple image, got im: {image}")
+#         # Paste images into canvas
+#         image = paste_images_on_canvas(images, canvas, layout)
+#         print(f" >> multiple image, got im: {image}")
 
 
-    # must go via np array!
-    np_image = np.array(image)
+#     # must go via np array!
+#     np_image = np.array(image)
 
-    # Create an ImageClip with MoviePy
-    image_clip = ImageClip(np_image)
+#     # Create an ImageClip with MoviePy
+#     image_clip = ImageClip(np_image)
 
-    # print(f"made image_clip: {image_clip} from canvas (image): {canvas} with images: {images}")
+#     # print(f"made image_clip: {image_clip} from canvas (image): {canvas} with images: {images}")
 
-    return image_clip
+#     return image_clip
 
 
 # ---------------------------------------------------------------------------------------------------------------------
