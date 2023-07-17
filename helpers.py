@@ -3,12 +3,9 @@
 import os
 import re
 
-from .ext_highlights import working_dir
-
 
 def dbg(string):
-    pass
-    # print(string)
+    print(f"------------------------------ {string}")
 
 
 def p(string=""):
@@ -24,9 +21,13 @@ def make_abs_path_to_script_dir(rel_path):
     return os.path.normpath(os.path.join(script_dir, rel_path))
 
 
-def make_abs_path_rel_to_working_dir(rel_path):
-    return os.path.normpath(os.path.join(working_dir, rel_path))
-
 
 def sanitize_filename(filename):
     return re.sub(r'(?u)[^-\w.{}]', '', filename.strip())
+
+
+from .ext_highlights import working_dir
+
+def make_abs_path_rel_to_working_dir(rel_path):
+    return os.path.normpath(os.path.join(working_dir, rel_path))
+
