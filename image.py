@@ -26,8 +26,8 @@ from typing import List, Tuple, Union
 import re
 
 
-border = 5
-# border = None
+# border = 5
+border = None
 
 def split_spec(spec: str) -> List[str]:
     dbg(f"split_spec: spec= {spec}")
@@ -78,48 +78,60 @@ def split_spec(spec: str) -> List[str]:
 
 
 def process_spec(spec: str, max_dimension: int, layout: str, is_top_level_spec = False) -> Image:
-    dbg(f"  PROCESS_SPEC called, max_dimension = {max_dimension} layout = {layout}")
+    dbg(f"  ?????????????   PROCESS_SPEC called, max_dimension = {max_dimension} layout = {layout}")
+
     """Process an image spec, returning an image.
     The spec can contain sub-specs in parentheses, which will be processed recursively.
     """
 
-        
+    layout_with_case = layout
+    layout = layout.lower()
+
     elements = split_spec(spec)
 
     images = []
     for el in elements:
         # sub-specs can be like 'a=b' or '(a)' or 'a=(b=c)'
         if "(" in el or "=" in el:
-            sub_layout = 'v' if layout == 'h' else 'h'  # Flip layout for sub-spec
+            sub_layout = 'v' if layout.lower() == 'h' else 'h'  # Flip layout for sub-spec
             dbg(f"   --- calling process_spec on a sublayout = {el}, before that images = {images}")
 
+            # for H and V modes, we need to to get all sub spec images before resizing any,
+            # since we need to split the desired H or V between all the images!
+            #
+            # so first just make existing stuff work by fetching all first.
             sub_spec_image = process_spec(el, max_dimension, sub_layout)
-            sub_spec_image = resized_image(sub_spec_image, max_dimension, layout)
+
+            # sub_spec_image = resized_image(sub_spec_image, max_dimension, layout_with_case)
 
             image_to_add = sub_spec_image
             dbg(f"   ---    .... now images = {images}")
 
         else:  # This is an image file
 
-            # wrong order! add border after resize!
             image = load_single_image(el, max_dimension)
-            # this is weird somehow.
-            image = resized_image(image, max_dimension, layout)
+            image = resized_image(image, max_dimension, layout_with_case)
 
             image_to_add = image
 
         images.append(image_to_add)
 
+    # do resizing of each image last (so H and V can work)
+    resized_images = []
+
+    for image in images:
+        resized_im = resized_image(image, max_dimension, layout_with_case)
+        resized_images.append(resized_im)
+
     # Get canvas size
-    max_width, max_height = get_canvas_size(images, max_dimension, layout)
+    max_width, max_height = get_canvas_size(resized_images, max_dimension, layout)
 
     dbg(f"  -=-= max_w and h: {max_width} {max_height}")
-    # Create new canvas
 
     # this shows the missing image with height * 2. The sub-images aren't being resized...
     canvas = Image.new('RGB', (max_width, max_height))
 
-    paste_images_on_canvas(images, canvas, layout)
+    paste_images_on_canvas(resized_images, canvas, layout)
 
     if is_top_level_spec:
         canvas = add_border(canvas, border)
@@ -136,7 +148,7 @@ def load_stacked_image_as_clip(image_spec: str, watermark_max_dimension: int, rg
 
     print(f"load_stacked_image_as_clip: watermark_max_dimension = {watermark_max_dimension} spec = {image_spec} layout = {layout}")
 
-    if layout not in ('h', 'v', None):
+    if layout.lower() not in ('h', 'v', None):
         raise ValueError(f'Invalid layout: {layout}')
 
     image = process_spec('='.join(image_spec[1:]), watermark_max_dimension, layout, True)
@@ -177,11 +189,16 @@ def load_single_image(image_file, max_dimension, border = None):
     
 
 def resized_image(image, max_dimension, layout):
+    print(f"resized_image: max_dim = {max_dimension} layout = {layout}")
     aspect_ratio = image.width / image.height
     if layout == 'h':
         new_size = (int(max_dimension * aspect_ratio), max_dimension)
-    else:
+    elif layout == 'v':
         new_size = (max_dimension, int(max_dimension / aspect_ratio))
+    elif layout == 'H':
+        new_size = (max_dimension, int(max_dimension * aspect_ratio))
+    else: # 'V'
+        new_size = (int(max_dimension / aspect_ratio), max_dimension)
 
     image = image.resize(new_size, Image.ANTIALIAS)
     return image
@@ -200,7 +217,7 @@ def get_canvas_size(images, max_dimension, layout):
 def paste_images_on_canvas(images, canvas, layout):
     offset = 0
     for image in images:
-        if layout == 'h':
+        if layout.lower() == 'h':
             canvas.paste(image, (offset, 0))
             offset += image.width
         else:  # 'v'
