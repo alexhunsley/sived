@@ -230,6 +230,7 @@ def resized_size(w, h, max_dimension, layout):
     if layout == 'h':
         new_size = (int(max_dimension * aspect_ratio), max_dimension)
     elif layout == 'v':
+        # this looks wrong?
         new_size = (max_dimension, int(max_dimension / aspect_ratio))
     elif layout == 'H':
         new_size = (max_dimension, int(max_dimension * aspect_ratio))
@@ -248,14 +249,6 @@ def resized_image(image, max_dimension, layout):
 
 # Returns combination of two aspect ratios in the H or V direction
 def combined_aspects(a0, a1, layout):
-    # w = a0
-    # h = 1.0
-
-    # if layout.lower() == 'h':
-    #     asp = (w + h*a1) / h
-    # else:
-    #     asp = a0 / (h + a0/a1)
-
     if layout.lower() == 'h':
         print("combine h eqn")
         return a0 + a1
@@ -266,49 +259,16 @@ def combined_aspects(a0, a1, layout):
 
 # returns w, h, and dimension along layout direction (w or h depending)
 def get_canvas_size(images, max_dimension, layout):
-    # print(f"    &**&*&*&*&* get_canvas_size: layout = {layout}")
-
-    # TODO combine aspects! for h or v (see eqns in books)
-
     combined_aspect = images[0].width / images[0].height
 
     for im in images[1:]:
         asp = im.width / im.height
         combined_aspect = combined_aspects(combined_aspect, asp, layout)
 
-    # print(f"after combination, combined_aspect = {combined_aspect}")
-
-    # for im in images:
-    #     print(f" popopopopopopo image: {im.width} {im.height}")
-
-    # if layout == 'h':
-    #     return max_dimension * combined_aspect, max_dimension, max_dimension * combined_aspect
-    # elif layout == 'H':
-    #     return max_dimension, max_dimension / combined_aspect, max_dimension / combined_aspect
-    # elif layout == 'v':
-    #     return max_dimension, max_dimension / combined_aspect, max_dimension / combined_aspect
-    # else:  # 'V'
-    #     return max_dimension * combined_aspect, max_dimension, max_dimension * combined_aspect
-
     if layout == 'h' or layout == 'V':
         return max_dimension * combined_aspect, max_dimension, max_dimension * combined_aspect
     else:  # 'H' or 'v'
         return max_dimension, max_dimension / combined_aspect, max_dimension / combined_aspect
-
-
-        # max_width = sum(image.width for image in images)
-        # print(f"    &**&*&*&*&*  h or H, calc max w as {max_width}") 
-        # max_height = max_dimension
-        # d_a_l = max_width
-    # else:
-    #     print(f"    &**&*&*&*&*  v or V") 
-    #     max_width = max_dimension
-    #     max_height = sum(image.height for image in images)
-    #     d_a_l = max_height
-
-
-    # return d_a_l, combined_aspect
-    # return max_width, max_height, d_a_l
 
 
 def paste_images_on_canvas(images, canvas, layout):
