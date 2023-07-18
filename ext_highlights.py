@@ -12,8 +12,15 @@ from moviepy.editor import concatenate_videoclips
 from moviepy.video.fx.all import fadein, fadeout
 from moviepy.video.VideoClip import ColorClip
 
+from collections import namedtuple
 
 use_threads = 8
+
+Sz = namedtuple('Sz', 'width height')
+
+# sz = Sz(1, 2)
+# print(sz)
+# sys.exit(0)
 
 # This works for local run from command line: 
 #
@@ -271,6 +278,25 @@ def process_video_toml(toml_file):
         final_clip = concatenate_videoclips(concat_clips)
         final_output_filename = f"{os.path.splitext(video_path)[0]}__concat.mp4"
         final_clip.write_videofile(final_output_filename, threads=use_threads)
+
+
+# w0, h0, a1, 'v'
+# print(combined_aspects(100, 100, 2, 'h'))
+# print(combined_aspects(100, 100, 2, 'v'))
+
+print(combined_aspects(1, 2, 'h'))
+print(combined_aspects(1, 2, 'v'))
+
+images = [Sz(10, 10), Sz(10, 10)]
+print("h:", get_canvas_size(images, 50, 'h'), "\n")
+
+print("H:", get_canvas_size(images, 50, 'H'), "\n")
+
+print("v:", get_canvas_size(images, 50, 'v'), "\n")
+
+print("V:", get_canvas_size(images, 50, 'V'), "\n")
+
+sys.exit(0)
 
 
 if __name__ == "__main__":

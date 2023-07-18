@@ -77,6 +77,23 @@ def split_spec(spec: str) -> List[str]:
 # sys.exit(0)
 
 
+# get width and height of list of images, arranged in specified way
+def image_collection_total_size(images, max_dimension, layout):
+    other_dimension = 0.0
+
+    for image in images:
+        if layout.lower() == 'h':
+            other_dimension += image.width
+        else: # 'w'
+            other_dimension += image.height
+
+
+    if layout.lower() == 'h':
+        return (other_dimension, max_dimension, other_dimension)
+
+    return (max_dimension, other_dimension, other_dimension)
+
+
 def process_spec(spec: str, max_dimension: int, layout: str, is_top_level_spec = False) -> Image:
     dbg(f"  ?????????????   PROCESS_SPEC called, max_dimension = {max_dimension} layout = {layout}")
 
@@ -109,12 +126,30 @@ def process_spec(spec: str, max_dimension: int, layout: str, is_top_level_spec =
 
         else:  # This is an image file
 
-            image = load_single_image(el, max_dimension)
-            image = resized_image(image, max_dimension, layout_with_case)
+            # for H or V, add sizes to get final wh size then compute other dim before calling resize below
+
+            image = load_single_image(el, max_dimension, None, False)
+            print(f" ()()(()()()() loaded image: w, h {image.width} {image.height})")
+            # image = resized_image(image, max_dimension, layout_with_case)
 
             image_to_add = image
 
         images.append(image_to_add)
+
+    max_width, max_height, dimension_along_layout = get_canvas_size(images, max_dimension, layout_with_case)
+
+    print(f" ********** 1  max_w max_h = {max_width}, {max_height}, d_a_layout = {dimension_along_layout}")
+
+    (ww, hh) = resized_size(max_width, max_height, max_dimension, layout_with_case)
+
+    print(f" ********** 2  ww, hh = {ww}, {hh}, layout = {layout}, max_dimension = {max_dimension}")
+    if layout == 'h':
+        max_dimension = hh
+    else:
+        max_dimension = ww
+
+
+    # (all_images_w, all_images_h, dimension_along_layout) = image_collection_total_size(images, max_dimension, layout)
 
     # do resizing of each image last (so H and V can work)
     resized_images = []
@@ -124,7 +159,7 @@ def process_spec(spec: str, max_dimension: int, layout: str, is_top_level_spec =
         resized_images.append(resized_im)
 
     # Get canvas size
-    max_width, max_height = get_canvas_size(resized_images, max_dimension, layout)
+    # max_width, max_height = get_canvas_size(resized_images, max_dimension, layout)
 
     dbg(f"  -=-= max_w and h: {max_width} {max_height}")
 
@@ -173,24 +208,25 @@ def add_border(image, border):
     return borderImage
 
 
-def load_single_image(image_file, max_dimension, border = None):
+def load_single_image(image_file, max_dimension, border=None, resize=True):
     print(f"load_single_image: max_dimension = {max_dimension}")
 
     image = Image.open(image_file)
-    aspect_ratio = image.width / image.height
-    if aspect_ratio > 1:  # width > height
-        new_size = (max_dimension, int(max_dimension / aspect_ratio))
-    else:
-        new_size = (int(max_dimension * aspect_ratio), max_dimension)
-    
-    image = image.resize(new_size, Image.ANTIALIAS)
+
+    if resize:
+        aspect_ratio = image.width / image.height
+        if aspect_ratio > 1:  # width > height
+            new_size = (max_dimension, int(max_dimension / aspect_ratio))
+        else:
+            new_size = (int(max_dimension * aspect_ratio), max_dimension)
+        
+        image = image.resize(new_size, Image.ANTIALIAS)
 
     return image
     
 
-def resized_image(image, max_dimension, layout):
-    print(f"resized_image: max_dim = {max_dimension} layout = {layout}")
-    aspect_ratio = image.width / image.height
+def resized_size(w, h, max_dimension, layout):
+    aspect_ratio = w / h
     if layout == 'h':
         new_size = (int(max_dimension * aspect_ratio), max_dimension)
     elif layout == 'v':
@@ -200,18 +236,79 @@ def resized_image(image, max_dimension, layout):
     else: # 'V'
         new_size = (int(max_dimension / aspect_ratio), max_dimension)
 
+    return new_size
+
+
+def resized_image(image, max_dimension, layout):
+    print(f"resized_image: max_dim = {max_dimension} layout = {layout}")
+    new_size = resized_size(image.width, image.height, max_dimension, layout)
     image = image.resize(new_size, Image.ANTIALIAS)
     return image
 
 
-def get_canvas_size(images, max_dimension, layout):
-    if layout == 'h':
-        max_width = sum(image.width for image in images)
-        max_height = max_dimension
+# Returns combination of two aspect ratios in the H or V direction
+def combined_aspects(a0, a1, layout):
+    # w = a0
+    # h = 1.0
+
+    # if layout.lower() == 'h':
+    #     asp = (w + h*a1) / h
+    # else:
+    #     asp = a0 / (h + a0/a1)
+
+    if layout.lower() == 'h':
+        print("combine h eqn")
+        return a0 + a1
     else:
-        max_width = max_dimension
-        max_height = sum(image.height for image in images)
-    return max_width, max_height
+        print("combine v eqn")
+        return a0 / (1.0 + a0/a1)
+
+
+# returns w, h, and dimension along layout direction (w or h depending)
+def get_canvas_size(images, max_dimension, layout):
+    # print(f"    &**&*&*&*&* get_canvas_size: layout = {layout}")
+
+    # TODO combine aspects! for h or v (see eqns in books)
+
+    combined_aspect = images[0].width / images[0].height
+
+    for im in images[1:]:
+        asp = im.width / im.height
+        combined_aspect = combined_aspects(combined_aspect, asp, layout)
+
+    # print(f"after combination, combined_aspect = {combined_aspect}")
+
+    # for im in images:
+    #     print(f" popopopopopopo image: {im.width} {im.height}")
+
+    # if layout == 'h':
+    #     return max_dimension * combined_aspect, max_dimension, max_dimension * combined_aspect
+    # elif layout == 'H':
+    #     return max_dimension, max_dimension / combined_aspect, max_dimension / combined_aspect
+    # elif layout == 'v':
+    #     return max_dimension, max_dimension / combined_aspect, max_dimension / combined_aspect
+    # else:  # 'V'
+    #     return max_dimension * combined_aspect, max_dimension, max_dimension * combined_aspect
+
+    if layout == 'h' or layout == 'V':
+        return max_dimension * combined_aspect, max_dimension, max_dimension * combined_aspect
+    else:  # 'H' or 'v'
+        return max_dimension, max_dimension / combined_aspect, max_dimension / combined_aspect
+
+
+        # max_width = sum(image.width for image in images)
+        # print(f"    &**&*&*&*&*  h or H, calc max w as {max_width}") 
+        # max_height = max_dimension
+        # d_a_l = max_width
+    # else:
+    #     print(f"    &**&*&*&*&*  v or V") 
+    #     max_width = max_dimension
+    #     max_height = sum(image.height for image in images)
+    #     d_a_l = max_height
+
+
+    # return d_a_l, combined_aspect
+    # return max_width, max_height, d_a_l
 
 
 def paste_images_on_canvas(images, canvas, layout):

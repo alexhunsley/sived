@@ -6,12 +6,14 @@ video_filename = "output_blue_larger_res.mp4"
 # watermark_filename = "h=(watermark_sample.png=watermark_sample3b.png)=(watermark_sample2b.png=(watermark_sample4b.png=watermark_sample3b.png)"
 # watermark_filename = "h=(watermark_sample.png=watermark_sample2b.png)"
 # watermark_filename = "h=watermark_sample.png=watermark_sample2b.png"
-watermark_filename = "h=(grid1.png=grid2.png)=(grid3.png=(grid4.png=grid1.png=grid2.png))"
+# watermark_filename = "h=(grid1.png=grid2.png)=(grid3.png=(grid4.png=grid1.png=grid2.png))"
 
 # watermark_filename = "H=(grid1.png=grid2.png)=(grid3.png=(grid4.png=grid1.png=grid2.png))"
 # watermark_filename = "H=grid1.png=grid2.png"
+# watermark_filename = "H=grid1.png=grid2.png"
+watermark_filename = "h=watermark_sample.png=watermark_sample2b.png"
 
-watermark_height = 400
+watermark_height = 250
 watermark_position = [0, 0]
 desc = "green test"
 
