@@ -215,3 +215,8 @@ pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python
 
+
+**/*.mp4
+**/*.MP4
+**/*.mov
+**/*.MOV
