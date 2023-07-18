@@ -13,6 +13,8 @@ from moviepy.video.fx.all import fadein, fadeout
 from moviepy.video.VideoClip import ColorClip
 
 
+use_threads = 8
+
 # This works for local run from command line: 
 #
 # In dir above:
@@ -162,7 +164,7 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
     # Then pan from top to bottom over time
     # pan_clip = zoom_in_clip.fx(lambda t: crop(zoom_in_clip, y1=int(50*t), y2=int(50*t) + img.size[1]))
 
-    clip.write_videofile(output_filename)
+    clip.write_videofile(output_filename, threads=use_threads)
 
     return clip
 
@@ -239,7 +241,8 @@ def process_video_toml(toml_file):
 
         # print(f"=-=-==-=      ... use_clip_rect for {idx} = {use_clip_rect}")
 
-        output_clip = process_segment(video_path, idx, segment['desc'], segment, video_data, use_clip_rect, segment_clip_rect) #, max_clip_rect if make_concatenation_video else None)
+        desc = get_desc(segment, video_data)
+        output_clip = process_segment(video_path, idx, desc, segment, video_data, use_clip_rect, segment_clip_rect) #, max_clip_rect if make_concatenation_video else None)
 
         if make_concatenation_video:
             # Determine fade duration from the TOML data
@@ -267,7 +270,7 @@ def process_video_toml(toml_file):
     if make_concatenation_video:
         final_clip = concatenate_videoclips(concat_clips)
         final_output_filename = f"{os.path.splitext(video_path)[0]}__concat.mp4"
-        final_clip.write_videofile(final_output_filename)
+        final_clip.write_videofile(final_output_filename, threads=use_threads)
 
 
 if __name__ == "__main__":

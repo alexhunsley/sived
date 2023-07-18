@@ -48,6 +48,10 @@ def get_temp_transpose_xy_size(segment, video_data):
     return get_inherited_value('temp_transpose_xy_size', segment, video_data, False)
 
 
+def get_desc(segment, video_data):
+    return get_inherited_value('desc', segment, video_data, "desc")
+
+
 def get_grab_frame(segment):
     if grab_frame := segment.get('grab_frame'):
         # print(f"got grab_frame BEFORE: {grab_frame}")
