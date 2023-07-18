@@ -26,8 +26,8 @@ from typing import List, Tuple, Union
 import re
 
 
-border = 4
-
+border = 5
+# border = None
 
 def split_spec(spec: str) -> List[str]:
     dbg(f"split_spec: spec= {spec}")
@@ -77,14 +77,12 @@ def split_spec(spec: str) -> List[str]:
 # sys.exit(0)
 
 
-def process_spec(spec: str, max_dimension: int, layout: str = None) -> Image:
-    dbg(f"  PROCESS_SPEC called, max_dimension = {max_dimension}")
+def process_spec(spec: str, max_dimension: int, layout: str, is_top_level_spec = False) -> Image:
+    dbg(f"  PROCESS_SPEC called, max_dimension = {max_dimension} layout = {layout}")
     """Process an image spec, returning an image.
     The spec can contain sub-specs in parentheses, which will be processed recursively.
     """
-    if layout is None:  # for main spec, layout is in spec
-        layout = spec[0]
-        spec = spec[2:]
+
         
     elements = split_spec(spec)
 
@@ -98,7 +96,7 @@ def process_spec(spec: str, max_dimension: int, layout: str = None) -> Image:
             sub_spec_image = process_spec(el, max_dimension, sub_layout)
             sub_spec_image = resized_image(sub_spec_image, max_dimension, layout)
 
-            images.append(sub_spec_image)
+            image_to_add = sub_spec_image
             dbg(f"   ---    .... now images = {images}")
 
         else:  # This is an image file
@@ -108,9 +106,9 @@ def process_spec(spec: str, max_dimension: int, layout: str = None) -> Image:
             # this is weird somehow.
             image = resized_image(image, max_dimension, layout)
 
-            # kinda works, but resizing of sub things means you can't keep border sizes 'neat' and same as each other.
-            # image = add_border(image, 30)
-            images.append(image)
+            image_to_add = image
+
+        images.append(image_to_add)
 
     # Get canvas size
     max_width, max_height = get_canvas_size(images, max_dimension, layout)
@@ -121,8 +119,12 @@ def process_spec(spec: str, max_dimension: int, layout: str = None) -> Image:
     # this shows the missing image with height * 2. The sub-images aren't being resized...
     canvas = Image.new('RGB', (max_width, max_height))
 
-    # Paste images onto canvas
-    return paste_images_on_canvas(images, canvas, layout)
+    paste_images_on_canvas(images, canvas, layout)
+
+    if is_top_level_spec:
+        canvas = add_border(canvas, border)
+
+    return canvas
 
 
 def load_stacked_image_as_clip(image_spec: str, watermark_max_dimension: int, rgb_mult: float = None) -> ImageClip:
@@ -137,7 +139,7 @@ def load_stacked_image_as_clip(image_spec: str, watermark_max_dimension: int, rg
     if layout not in ('h', 'v', None):
         raise ValueError(f'Invalid layout: {layout}')
 
-    image = process_spec('='.join(image_spec[1:]), watermark_max_dimension, layout)
+    image = process_spec('='.join(image_spec[1:]), watermark_max_dimension, layout, True)
 
     np_image = np.array(image)
 
@@ -151,9 +153,9 @@ def load_stacked_image_as_clip(image_spec: str, watermark_max_dimension: int, rg
 
 def add_border(image, border):
     if not border: 
-        return Image
+        return image
 
-    borderImage = Image.new(image.mode, (image.width + border*2, image.height + border * 2), '#000')
+    borderImage = Image.new(image.mode, (image.width + border*2, image.height + border * 2), '#080')
     borderImage.paste(image, (border, border))
 
     return borderImage
@@ -172,11 +174,7 @@ def load_single_image(image_file, max_dimension, border = None):
     image = image.resize(new_size, Image.ANTIALIAS)
 
     return image
-
-    # TODO why this borken?
-    # return add_border(image, border)
     
-
 
 def resized_image(image, max_dimension, layout):
     aspect_ratio = image.width / image.height
