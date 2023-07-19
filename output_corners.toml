@@ -1,0 +1,132 @@
+[[video]]
+# video_filename = "output_green.mp4"
+video_filename = "output_blue_larger_res.mp4"
+# watermark_filename = "h=watermark_sample.png=(watermark_sample2.png=(watermark_sample3.png=watermark_sample4.png))=watermark_sample4.png"
+# watermark_filename = "v=((watermark_sample.png=watermark_sample2.png)=(watermark_sample3.png=watermark_sample4.png)=watermark_sample3.png)=watermark_sample2.png"
+# watermark_filename = "h=(watermark_sample.png=watermark_sample3b.png)=(watermark_sample2b.png=(watermark_sample4b.png=watermark_sample3b.png)"
+# watermark_filename = "h=(watermark_sample.png=watermark_sample2b.png)"
+# watermark_filename = "h=watermark_sample.png=watermark_sample2b.png"
+# watermark_filename = "h=(grid1.png=grid2.png)=(grid3.png=(grid4.png=grid1.png=grid2.png))"
+
+# watermark_filename = "H=(grid1.png=grid2.png)=(grid3.png=(grid4.png=grid1.png=grid2.png))"
+# watermark_filename = "V=grid1.png=grid2.png"
+watermark_filename = "V=grid1.png=grid2.png"
+
+
+# watermark_filename = "h=watermark_sample.png=watermark_sample2b.png"
+
+watermark_height = 100
+desc = "green test"
+
+
+
+# VERTS
+
+[[video.segments]]
+end_time = "0.5"
+watermark_position = [-2, -2]
+
+
+# [[video.segments]]
+# start_time = "0.5"
+# end_time = "1"
+# watermark_position = [0, 0]
+
+# [[video.segments]]
+# start_time = "1"
+# end_time = "1.5"
+# watermark_position = [-2, 0]
+
+# [[video.segments]]
+# start_time = "1.5"
+# end_time = "2"
+# watermark_position = [-1, 0]
+
+# [[video.segments]]
+# start_time = "2"
+# end_time = "2.5"
+# watermark_position = [-1, -2]
+
+# [[video.segments]]
+# start_time = "2.5"
+# end_time = "3"
+# watermark_position = [-1, -1]
+
+# [[video.segments]]
+# start_time = "3"
+# end_time = "3.5"
+# watermark_position = [-2, -1]
+
+
+# [[video.segments]]
+# start_time = "3.5"
+# end_time = "4"
+# watermark_position = [0, -1]
+
+
+# [[video.segments]]
+# start_time = "4"
+# end_time = "4.5"
+# watermark_position = [0, -2]
+
+
+
+
+
+# [[video.segments]]
+# end_time = "0.5"
+# watermark_filename = "H=grid1.png=grid2.png"
+# watermark_position = [-2, -2]
+
+# [[video.segments]]
+# start_time = "0.5"
+# end_time = "1"
+# watermark_filename = "H=grid1.png=grid2.png"
+# watermark_position = [0, 0]
+
+# [[video.segments]]
+# start_time = "1"
+# end_time = "1.5"
+# watermark_filename = "H=grid1.png=grid2.png"
+# watermark_position = [-2, 0]
+
+# [[video.segments]]
+# start_time = "1.5"
+# end_time = "2"
+# watermark_filename = "H=grid1.png=grid2.png"
+# watermark_position = [-1, 0]
+
+# [[video.segments]]
+# start_time = "2"
+# end_time = "2.5"
+# watermark_filename = "H=grid1.png=grid2.png"
+# watermark_position = [-1, -2]
+
+# [[video.segments]]
+# start_time = "2.5"
+# end_time = "3"
+# watermark_filename = "H=grid1.png=grid2.png"
+# watermark_position = [-1, -1]
+
+# [[video.segments]]
+# start_time = "3"
+# end_time = "3.5"
+# watermark_filename = "H=grid1.png=grid2.png"
+# watermark_position = [-2, -1]
+
+
+# [[video.segments]]
+# start_time = "3.5"
+# end_time = "4"
+# watermark_filename = "H=grid1.png=grid2.png"
+# watermark_position = [0, -1]
+
+
+# [[video.segments]]
+# start_time = "4"
+# end_time = "4.5"
+# watermark_filename = "H=grid1.png=grid2.png"
+# watermark_position = [0, -2]
+
+
+

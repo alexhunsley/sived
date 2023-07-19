@@ -297,19 +297,20 @@ def process_video_toml(toml_file):
 # print(combined_aspects(100, 100, 2, 'h'))
 # print(combined_aspects(100, 100, 2, 'v'))
 
-print(combined_aspects(1, 2, 'h'))
-print(combined_aspects(1, 2, 'v'))
+# herus testing
+# print(combined_aspects(1, 2, 'h'))
+# print(combined_aspects(1, 2, 'v'))
 
-images = [Sz(10, 10), Sz(10, 10)]
-print("h:", get_canvas_size(images, 50, 'h'), "\n")
+# images = [Sz(10, 10), Sz(10, 10)]
+# print("h:", get_canvas_size(images, 50, 'h'), "\n")
 
-print("H:", get_canvas_size(images, 50, 'H'), "\n")
+# print("H:", get_canvas_size(images, 50, 'H'), "\n")
 
-print("v:", get_canvas_size(images, 50, 'v'), "\n")
+# print("v:", get_canvas_size(images, 50, 'v'), "\n")
 
-print("V:", get_canvas_size(images, 50, 'V'), "\n")
-
-sys.exit(0)
+# print("V:", get_canvas_size(images, 50, 'V'), "\n")
+# 
+# sys.exit(0)
 
 
 if __name__ == "__main__":

@@ -106,6 +106,8 @@ def process_spec(spec: str, max_dimension: int, layout: str, is_top_level_spec =
 
     elements = split_spec(spec)
 
+    total_image_dimensions_in_layout_dir = 0
+
     images = []
     for el in elements:
         # sub-specs can be like 'a=b' or '(a)' or 'a=(b=c)'
@@ -136,17 +138,24 @@ def process_spec(spec: str, max_dimension: int, layout: str, is_top_level_spec =
 
         images.append(image_to_add)
 
-    max_width, max_height, dimension_along_layout = get_canvas_size(images, max_dimension, layout_with_case)
+        total_image_dimensions_in_layout_dir += image_to_add.width if layout == 'h' else image_to_add.height
 
+    max_width, max_height, dimension_along_layout, dim_orth_to_layout = get_canvas_size(images, max_dimension, layout_with_case)
+
+    # this looks right.
+    # outputs "max_w max_h = 100, 33, d_a_layout = 100"
     print(f" ********** 1  max_w max_h = {max_width}, {max_height}, d_a_layout = {dimension_along_layout}")
-
+    print(f" ********** 1b total_image_dimensions_in_layout_dir = {total_image_dimensions_in_layout_dir}")
+    # think this ropey
     (ww, hh) = resized_size(max_width, max_height, max_dimension, layout_with_case)
 
     print(f" ********** 2  ww, hh = {ww}, {hh}, layout = {layout}, max_dimension = {max_dimension}")
-    if layout == 'h':
-        max_dimension = hh
-    else:
-        max_dimension = ww
+
+    max_dimension = dim_orth_to_layout
+    # if layout == 'h':
+    #     max_dimension = hh
+    # else:
+    #     max_dimension = ww
 
 
     # (all_images_w, all_images_h, dimension_along_layout) = image_collection_total_size(images, max_dimension, layout)
@@ -227,22 +236,30 @@ def load_single_image(image_file, max_dimension, border=None, resize=True):
     
 
 def resized_size(w, h, max_dimension, layout):
+
     aspect_ratio = w / h
+
+    print(f"resized_size: w {w} h {h} asp {aspect_ratio} max_dim = {max_dimension} layout = {layout}")
+
     if layout == 'h':
         new_size = (int(max_dimension * aspect_ratio), max_dimension)
     elif layout == 'v':
         # this looks wrong?
+        # new_size = (max_dimension, int(max_dimension / aspect_ratio))
         new_size = (max_dimension, int(max_dimension / aspect_ratio))
     elif layout == 'H':
-        new_size = (max_dimension, int(max_dimension * aspect_ratio))
+        new_size = (int(max_dimension * aspect_ratio), max_dimension)
+        # new_size = (max_dimension, int(max_dimension * aspect_ratio))
     else: # 'V'
-        new_size = (int(max_dimension / aspect_ratio), max_dimension)
+        new_size = (max_dimension, int(max_dimension / aspect_ratio))
 
+    print(f"resized_size:     ... and made new_size = {new_size}")
     return new_size
 
 
 def resized_image(image, max_dimension, layout):
     print(f"resized_image: max_dim = {max_dimension} layout = {layout}")
+
     new_size = resized_size(image.width, image.height, max_dimension, layout)
     image = image.resize(new_size, Image.ANTIALIAS)
     return image
@@ -267,9 +284,15 @@ def get_canvas_size(images, max_dimension, layout):
         combined_aspect = combined_aspects(combined_aspect, asp, layout)
 
     if layout == 'h' or layout == 'V':
-        return max_dimension * combined_aspect, max_dimension, max_dimension * combined_aspect
+        ret_w = int(max_dimension * combined_aspect)
+        ret_h = max_dimension
+        (d_a_l, d_o_t_l) = (ret_w, ret_h) if layout == 'h' else (ret_h, ret_w)
     else:  # 'H' or 'v'
-        return max_dimension, max_dimension / combined_aspect, max_dimension / combined_aspect
+        ret_w = max_dimension
+        ret_h = int(max_dimension / combined_aspect)
+        (d_a_l, d_o_t_l) = (ret_h, ret_w) if layout == 'v' else (ret_w, ret_h)
+
+    return ret_w, ret_h, d_a_l, d_o_t_l
 
 
 def paste_images_on_canvas(images, canvas, layout):
