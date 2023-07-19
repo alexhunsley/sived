@@ -19,6 +19,14 @@ def get_video_filename(segment, video_data, toml_filename):
     return video_path
 
 
+def get_start_time(segment, video_data):
+    return get_inherited_value('start_time', segment, video_data)
+
+
+def get_end_time(segment, video_data, default_value):
+    return get_inherited_value('end_time', segment, video_data, default_value)
+
+
 def get_rgb_mult(segment, video_data):
     return get_inherited_value('rgb_mult', segment, video_data)
 

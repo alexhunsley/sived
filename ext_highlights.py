@@ -144,8 +144,8 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
 
         print(f"  -------- clip rotation: {clip.rotation}")
 
-        start_time = time_to_seconds(segment.get('start_time', "0"))
-        end_time = time_to_seconds(segment.get('end_time', f"{clip.duration}"))
+        start_time = get_start_time(segment, video_data)
+        end_time = get_end_time(segment, video_data, f"{clip.duration}")
 
         # Trim
         clip = clip.subclip(start_time, end_time)
