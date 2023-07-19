@@ -179,11 +179,12 @@ def load_stacked_image_as_clip(image_spec: str, watermark_max_dimension: int, rg
 
     image_spec = image_spec.split('=')
 
-    layout = image_spec[0] if len(image_spec) > 1 else None
+    # default to h layout if only one image
+    layout = image_spec[0] if len(image_spec[0]) == 1 else 'h'
 
     print(f"load_stacked_image_as_clip: watermark_max_dimension = {watermark_max_dimension} spec = {image_spec} layout = {layout}")
 
-    if layout.lower() not in ('h', 'v', None):
+    if layout.lower() not in ('h', 'v'):
         raise ValueError(f'Invalid layout: {layout}')
 
     image = process_spec('='.join(image_spec[1:]), watermark_max_dimension, layout, True)

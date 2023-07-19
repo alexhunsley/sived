@@ -14,6 +14,12 @@ from moviepy.video.VideoClip import ColorClip
 
 from collections import namedtuple
 
+# TO FIX:
+#
+# centre and right/bottom align isn't working because we're using first image dimension, not all!
+# fixes in other branch, ahead?
+#
+
 use_threads = 8
 
 Sz = namedtuple('Sz', 'width height')
@@ -224,7 +230,10 @@ def process_video_toml(toml_file):
         # print(f"=-=-==-=   in make_concatenation_video bit")
 
         for idx, segment in enumerate(video_data['segments']):
-            rect = segment.get('clip_rect', {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]}) 
+            rect = get_clip_rect(segment, video_data) 
+
+            if not rect:
+                rect = {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]}
 
             print(f"   IN MIN/MAX, befpre comp, clip rect {rect} and max_clip_rect is {max_clip_rect}")
 
@@ -243,7 +252,11 @@ def process_video_toml(toml_file):
         # video_path = get_video_filename(segment, video_data)
         video_path = make_abs_path_rel_to_working_dir(get_video_filename(segment, video_data, toml_file))
 
-        segment_clip_rect = segment.get('clip_rect', {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]})
+        segment_clip_rect = get_clip_rect(segment, video_data) 
+
+        if not segment_clip_rect:
+            segment_clip_rect = {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]}
+                
         use_clip_rect = max_clip_rect if make_concatenation_video == True else segment_clip_rect
 
         # print(f"=-=-==-=      ... use_clip_rect for {idx} = {use_clip_rect}")

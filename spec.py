@@ -24,7 +24,17 @@ def get_rgb_mult(segment, video_data):
 
 
 def get_watermark_filename(segment, video_data):
-    return get_inherited_value('watermark_filename', segment, video_data, None)
+    fnames = get_inherited_value('watermark_filename', segment, video_data, None)
+
+    # if nothing specified, don't try prepending 'h' to front if it's missing
+    if len(fnames) == 0:
+        return None
+
+    # default to 'h' layout if none provided as first item
+    if len(fnames.split('=')[0]) == 1:
+        return fnames
+
+    return f"h=={fnames}"
 
 
 # watermark has its aspect ratio preserved
@@ -50,6 +60,10 @@ def get_temp_transpose_xy_size(segment, video_data):
 
 def get_desc(segment, video_data):
     return get_inherited_value('desc', segment, video_data, "desc")
+
+
+def get_clip_rect(segment, video_data):
+    return get_inherited_value('clip_rect', segment, video_data, None)
 
 
 def get_grab_frame(segment):
