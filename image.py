@@ -312,7 +312,7 @@ def paste_images_on_canvas(images, canvas, layout):
 
 def calc_watermark_position(video_clip_rect, watermark_size, watermark_position, segment_offset_inside_context):
 
-    # print(f"get_watermark_position: video_clip_rect = {video_clip_rect}, watermark_size = {watermark_size}, watermark_position = {watermark_position}, segment_offset_inside_context = {segment_offset_inside_context}")
+    print(f"get_watermark_position: video_clip_rect = {video_clip_rect}, watermark_size = {watermark_size}, watermark_position = {watermark_position}, segment_offset_inside_context = {segment_offset_inside_context}")
 
     wp_dict = dict(enumerate(watermark_position))
 
@@ -402,7 +402,7 @@ def apply_watermark(clip, clip_rect, clip_offset_in_context, segment, video_data
         watermark_offset_in_context['y'] += clip_offset_in_context['y'] - clip_rect['y']
         # print(f"Made a watermark_offset_in_context: {watermark_offset_in_context} from seg clip_rect = {clip_rect}")
 
-    watermark_position = calc_watermark_position(clip_rect, img.size, watermark_position, watermark_offset_in_context)
+    watermark_position = calc_watermark_position(clip_offset_in_context, img.size, watermark_position, watermark_offset_in_context)
 
     # a composite video clip with the watermark image overlay
     return CompositeVideoClip([clip, img.set_position(watermark_position)])
