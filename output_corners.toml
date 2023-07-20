@@ -12,6 +12,9 @@ video_filename = "output_blue_larger_res.mp4"
 # watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
 watermark_filename = "v=grid1.png=(grid2.png=grid3.png)"
 
+# path prepending all non-absolute watermark files
+watermark_home = "images"
+
 start_time = "0"
 end_time = "0.5"
 

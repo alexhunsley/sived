@@ -31,6 +31,10 @@ def get_rgb_mult(segment, video_data):
     return get_inherited_value('rgb_mult', segment, video_data)
 
 
+def get_watermark_home(segment, video_data):
+    return get_inherited_value('watermark_home', segment, video_data)
+
+
 def get_watermark_filename(segment, video_data):
     fnames = get_inherited_value('watermark_filename', segment, video_data, None)
 
@@ -81,3 +85,4 @@ def get_grab_frame(segment):
         # print(f"got grab_frame AFTER: {grab_frame}")
 
     return grab_frame
+

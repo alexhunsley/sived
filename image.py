@@ -94,8 +94,8 @@ def image_collection_total_size(images, max_dimension, layout):
     return (max_dimension, other_dimension, other_dimension)
 
 
-def process_spec(spec: str, max_dimension: int, layout: str, is_top_level_spec = False) -> Image:
-    dbg(f"  ?????????????   PROCESS_SPEC called, max_dimension = {max_dimension} layout = {layout}")
+def process_spec(spec: str, max_dimension: int, layout: str, is_top_level_spec = False, images_dir=None) -> Image:
+    dbg(f"  ?????????????   PROCESS_SPEC called, max_dimension = {max_dimension} layout = {layout}, images_dir: {images_dir}")
 
     """Process an image spec, returning an image.
     The spec can contain sub-specs in parentheses, which will be processed recursively.
@@ -109,6 +109,7 @@ def process_spec(spec: str, max_dimension: int, layout: str, is_top_level_spec =
     total_image_dimensions_in_layout_dir = 0
 
     images = []
+
     for el in elements:
         # sub-specs can be like 'a=b' or '(a)' or 'a=(b=c)'
         if "(" in el or "=" in el:
@@ -119,7 +120,7 @@ def process_spec(spec: str, max_dimension: int, layout: str, is_top_level_spec =
             # since we need to split the desired H or V between all the images!
             #
             # so first just make existing stuff work by fetching all first.
-            sub_spec_image = process_spec(el, max_dimension, sub_layout)
+            sub_spec_image = process_spec(el, max_dimension, sub_layout, False, images_dir)
 
             # sub_spec_image = resized_image(sub_spec_image, max_dimension, layout_with_case)
 
@@ -130,7 +131,7 @@ def process_spec(spec: str, max_dimension: int, layout: str, is_top_level_spec =
 
             # for H or V, add sizes to get final wh size then compute other dim before calling resize below
 
-            image = load_single_image(el, max_dimension, None, False)
+            image = load_single_image(el, max_dimension, images_dir, None, False)
             print(f" ()()(()()()() loaded image: w, h {image.width} {image.height})")
             # image = resized_image(image, max_dimension, layout_with_case)
 
@@ -183,7 +184,7 @@ def process_spec(spec: str, max_dimension: int, layout: str, is_top_level_spec =
     return canvas
 
 
-def load_stacked_image_as_clip(image_spec: str, watermark_max_dimension: int, rgb_mult: float = None) -> ImageClip:
+def load_stacked_image_as_clip(image_spec: str, watermark_max_dimension: int, rgb_mult: float = None, images_home=None) -> ImageClip:
     print(f"start new version of load_stacked_image_as_clip")
 
     image_spec = image_spec.split('=')
@@ -196,7 +197,7 @@ def load_stacked_image_as_clip(image_spec: str, watermark_max_dimension: int, rg
     if layout.lower() not in ('h', 'v'):
         raise ValueError(f'Invalid layout: {layout}')
 
-    image = process_spec('='.join(image_spec[1:]), watermark_max_dimension, layout, True)
+    image = process_spec('='.join(image_spec[1:]), watermark_max_dimension, layout, True, images_home)
 
     np_image = np.array(image)
 
@@ -218,8 +219,11 @@ def add_border(image, border):
     return borderImage
 
 
-def load_single_image(image_file, max_dimension, border=None, resize=True):
+def load_single_image(image_file, max_dimension, images_home=None, border=None, resize=True):
     print(f"load_single_image: max_dimension = {max_dimension}")
+
+    if not os.path.isabs(image_file) and images_home:
+        image_file = os.path.join(images_home, image_file)
 
     image = Image.open(image_file)
 
@@ -371,6 +375,7 @@ def apply_watermark(clip, clip_rect, clip_offset_in_context, segment, video_data
     # global make_concatenation_video
 
     watermark_filename = get_watermark_filename(segment, video_data)
+    images_home = get_watermark_home(segment, video_data)
 
     if watermark_filename is None:
         print(f"  >>>> apply_watermark: early bail, no filename")
@@ -380,7 +385,7 @@ def apply_watermark(clip, clip_rect, clip_offset_in_context, segment, video_data
 
     rgb_mult = get_rgb_mult(segment, video_data)
     # Load the image and resize it
-    img = load_stacked_image_as_clip(watermark_filename, watermark_height, rgb_mult)
+    img = load_stacked_image_as_clip(watermark_filename, watermark_height, rgb_mult, images_home)
 
     # Decide watermark height
     # watermark_height = get_watermark_height(segment, video_data)
