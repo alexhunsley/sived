@@ -96,6 +96,13 @@ from .size import *
 #
 
 
+def add_text(clip, text):
+    txt_clip = TextClip(text, fontsize = 60, color = 'red') 
+    txt_clip = txt_clip.set_pos('left').set_duration(clip.duration) 
+
+    # Overlay the text clip on the first video clip 
+    return CompositeVideoClip([clip, txt_clip])
+
 
 # clip_rect is for just this segment. It might be actual seg rect or the union'd rect.
 # segment_clip_rect the segment's own clip rect as per toml.
@@ -176,6 +183,9 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
 
     # Then pan from top to bottom over time
     # pan_clip = zoom_in_clip.fx(lambda t: crop(zoom_in_clip, y1=int(50*t), y2=int(50*t) + img.size[1]))
+
+    seg_text = f"seg {idx}"
+    clip = add_text(clip, seg_text)
 
     clip.write_videofile(output_filename, threads=use_threads)
 
