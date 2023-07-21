@@ -322,8 +322,9 @@ def calc_watermark_position(video_clip_rect, watermark_size, watermark_position,
 
     # Get the video width and height
     # _, _, video_width, video_height = video_clip_rect
-    video_width = video_clip_rect['end_x'] - video_clip_rect['x']
-    video_height = video_clip_rect['end_y'] - video_clip_rect['y']
+
+    video_width = segment_offset_inside_context['end_x'] - segment_offset_inside_context['x']
+    video_height = segment_offset_inside_context['end_y'] - segment_offset_inside_context['y']
 
     # print(f"GOT VID WID, HEI: {video_width} {video_height}")
     # Get the watermark width and height
@@ -400,13 +401,22 @@ def apply_watermark(clip, clip_rect, clip_offset_in_context, segment, video_data
     # Decide watermark position
     watermark_position = get_watermark_position(segment, video_data)
 
-    watermark_offset_in_context = {'x': 0, 'y': 0}
+    watermark_offset_in_context = {}
+
+    print(f"apply_watermark   clip_rect = {clip_rect}")
+    print(f"apply_watermark   clip_offset_in_context = {clip_offset_in_context}")
+
+    print(f"sadsadsad {clip_offset_in_context['end_x']}")
 
     if make_concatenation_video:
-        watermark_offset_in_context['x'] += clip_offset_in_context['x'] - clip_rect['x']
-        watermark_offset_in_context['y'] += clip_offset_in_context['y'] - clip_rect['y']
+        watermark_offset_in_context['x'] = clip_offset_in_context['x'] - clip_rect['x']
+        watermark_offset_in_context['y'] = clip_offset_in_context['y'] - clip_rect['y']
+        watermark_offset_in_context['end_x'] = clip_offset_in_context['end_x'] # - clip_rect['end_x']
+        watermark_offset_in_context['end_y'] = clip_offset_in_context['end_y'] # - clip_rect['end_y']
         # print(f"Made a watermark_offset_in_context: {watermark_offset_in_context} from seg clip_rect = {clip_rect}")
 
+    print("sadsadsad2")
+    
     watermark_position = calc_watermark_position(clip_offset_in_context, img.size, watermark_position, watermark_offset_in_context)
 
     # a composite video clip with the watermark image overlay

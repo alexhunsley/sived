@@ -175,6 +175,11 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
     if get_temp_transpose_xy_size(segment, video_data):
         clip = clip.resize(clip.size[::-1])
 
+    #  {'x': 128, 'y': 128, 'end_x': 896, 'end_y': 640}
+    print(f" clip_rect = {clip_rect}")
+    print(f" segment_clip_rect = {segment_clip_rect}")
+    # sys.exit(0)
+
     # segment_clip_rect has the x, y we need for clip_offset_in_context
     clip = apply_watermark(clip, clip_rect, segment_clip_rect, segment, video_data)
 
@@ -240,6 +245,7 @@ def process_video_toml(toml_file):
         # print(f"=-=-==-=   in make_concatenation_video bit")
 
         for idx, segment in enumerate(video_data['segments']):
+            print(f"   union seg rects: seg {idx}")
             rect = get_clip_rect(segment, video_data) 
 
             if not rect:
@@ -256,7 +262,7 @@ def process_video_toml(toml_file):
 
 
     for idx, segment in enumerate(video_data['segments']):
-        # print(f"=-=-==-=   in segment bit, idx = {idx} segment = {segment}")
+        print(f"=-=-==-=   in segment bit, idx = {idx} segment = {segment}")
 
         # guess could cache the vids in memory? not sure what being automatically unloaded, anyhoo
         # video_path = get_video_filename(segment, video_data)
@@ -269,7 +275,7 @@ def process_video_toml(toml_file):
                 
         use_clip_rect = max_clip_rect if make_concatenation_video == True else segment_clip_rect
 
-        # print(f"=-=-==-=      ... use_clip_rect for {idx} = {use_clip_rect}")
+        print(f"=-=-==-=      ... use_clip_rect for {idx} = {use_clip_rect}")
 
         desc = get_desc(segment, video_data)
         output_clip = process_segment(video_path, idx, desc, segment, video_data, use_clip_rect, segment_clip_rect) #, max_clip_rect if make_concatenation_video else None)
