@@ -20,6 +20,8 @@ from collections import namedtuple
 # fixes in other branch, ahead?
 #
 
+show_seg_number = False
+
 use_threads = 8
 
 Sz = namedtuple('Sz', 'width height')
@@ -189,8 +191,9 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
     # Then pan from top to bottom over time
     # pan_clip = zoom_in_clip.fx(lambda t: crop(zoom_in_clip, y1=int(50*t), y2=int(50*t) + img.size[1]))
 
-    seg_text = f"seg {idx}"
-    clip = add_text(clip, seg_text)
+    if show_seg_number:
+        seg_text = f"seg {idx}"
+        clip = add_text(clip, seg_text)
 
     clip.write_videofile(output_filename, threads=use_threads)
 
