@@ -5,12 +5,17 @@ from dataclasses import dataclass, field
 from .maths import Maths
 
 
-@dataclass(frozen=True, order=True)
+# @dataclass(frozen=True, order=True)
 class Size:
-    width: float
-    height: float
-    aspect_ratio: float
-    area: float
+    # width: float
+    # height: float
+    # aspect_ratio: float
+
+
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.aspect_ratio = width / height if height != 0 else None
 
 
     @classmethod
