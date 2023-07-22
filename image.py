@@ -234,7 +234,7 @@ def load_single_image(image_file, max_dimension, images_home=None, border=None, 
         else:
             new_size = (int(max_dimension * aspect_ratio), max_dimension)
         
-        image = image.resize(new_size, Image.ANTIALIAS)
+        image = image.resize(new_size, Image.Resampling.LANCZOS)
 
     return image
     
@@ -265,7 +265,7 @@ def resized_image(image, max_dimension, layout):
     print(f"resized_image: max_dim = {max_dimension} layout = {layout}")
 
     new_size = resized_size(image.width, image.height, max_dimension, layout)
-    image = image.resize(new_size, Image.ANTIALIAS)
+    image = image.resize(new_size, Image.Resampling.LANCZOS)
     return image
 
 
