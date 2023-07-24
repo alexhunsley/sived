@@ -11,6 +11,7 @@ video_filename = "output_blue_larger_res.mp4"
 # watermark_filename = "H=(grid1.png=grid2.png)=(grid3.png=(grid4.png=grid1.png=grid2.png))"
 # watermark_filename = "H=grid1.png=grid2.png"
 # watermark_filename = "H=grid1.png=grid2.png"
+watermark_home = "images/"
 watermark_filename = "h=watermark_sample.png=watermark_sample2b.png"
 
 watermark_height = 250
