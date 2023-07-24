@@ -383,11 +383,11 @@ def apply_watermark(clip, clip_rect, clip_offset_in_context, segment, video_data
         print(f"  >>>> apply_watermark: early bail, no filename")
         return clip
 
-    watermark_height = get_watermark_height(segment, video_data)
+    watermark_dimension = get_watermark_dimension(segment, video_data)
 
     rgb_mult = get_rgb_mult(segment, video_data)
     # Load the image and resize it
-    img = load_stacked_image_as_clip(watermark_filename, watermark_height, rgb_mult, images_home)
+    img = load_stacked_image_as_clip(watermark_filename, watermark_dimension, rgb_mult, images_home)
 
     # Decide watermark height
     # watermark_height = get_watermark_height(segment, video_data)

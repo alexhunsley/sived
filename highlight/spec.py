@@ -58,8 +58,8 @@ def get_watermark_filename(segment, video_data):
 
 
 # watermark has its aspect ratio preserved
-def get_watermark_height(segment, video_data):
-    return get_inherited_value('watermark_height', segment, video_data, 225)
+def get_watermark_dimension(segment, video_data):
+    return get_inherited_value('watermark_dimension', segment, video_data, 225)
 
 
 def get_watermark_position(segment, video_data):

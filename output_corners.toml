@@ -21,7 +21,7 @@ end_time = "1.5"
 
 # watermark_filename = "h=watermark_sample.png=watermark_sample2b.png"
 
-watermark_height = 200
+watermark_dimension = 200
 desc = "green test"
 
 
