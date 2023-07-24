@@ -16,16 +16,12 @@ class Size:
         self.width = width
         self.height = height
         self.aspect_ratio = width / height if height != 0 else None
+        self.area = width * height
 
 
     @classmethod
     def make(cls, width: float, height: float):
-        return cls(
-            width,
-            height,
-            width / height if height != 0 else None,
-            width * height
-        )
+        return cls(width, height)
 
 
     def scaled(self, factor):
