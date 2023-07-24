@@ -22,6 +22,7 @@ from moviepy.video.fx.all import fadein, fadeout
 # IMAGE STACKING from gpt
 
 from .helpers import dbg
+from .time import *
 from typing import List, Tuple, Union
 import re
 
