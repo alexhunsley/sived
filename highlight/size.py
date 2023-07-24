@@ -7,15 +7,11 @@ from .maths import Maths
 
 # @dataclass(frozen=True, order=True)
 class Size:
-    # width: float
-    # height: float
-    # aspect_ratio: float
-
-
     def __init__(self, width, height):
         self.width = width
         self.height = height
         self.aspect_ratio = width / height if height != 0 else None
+        self.aspect_ratio_inv = height / width if height != 0 else None
         self.area = width * height
 
 
