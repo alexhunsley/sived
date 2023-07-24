@@ -7,37 +7,19 @@ from .size import *
 # @functools.total_ordering
 # @dataclass(frozen=True, order=True)
 class Rect:
-    # x: float
-    # y: float
-    # size: Size
-    # end_x: float
-    # end_y: float
-    # centre_x: float
-    # centre_y: float
-
-    # x,
-    # y,
-    # Size(end_x - x, end_y - y),
-    # end_x,
-    # end_y,
-    # (x + end_x) / 2.0,
-    # (y + end_y) / 2.0,
-    #
     def __init__(self, x, y, size, end_x, end_y, centre_x, centre_y):
-        self.x = x
-        self.y = y
+        self.x = float(x)
+        self.y = float(y)
         self.size = size
-        self.end_x = end_x
-        self.end_y = end_y
+        self.end_x = float(end_x)
+        self.end_y = float(end_y)
         # self.aspect_ratio = size.aspect_ratio
         # self.aspect_ratio_inv = size.aspect_ratio_inv
         self.area = size.area
+        self.centre_x = float(centre_x)
+        self.centre_y = float(centre_y)
 
 
-    # Call make with either of these styles:
-    #
-    #    Rect.make(x, y, size)
-    #    Rect.make(x, y, end_x, end_y)
     @classmethod
     def make(cls, x, y, arg3, arg4=None):
         if arg4:
@@ -72,19 +54,24 @@ class Rect:
         )
 
 
-    # def __lt__(self, other: 'Size') -> bool:
-    #     return self.width < other.width and self.height < other.height
-    #
-    #
-    # def __eq__(self, other: 'Size') -> bool:
-    #     return self.width == other.width and self.height == other.height
+    @classmethod
+    def make_with_centre_and_size(cls, centre_x, centre_y, size):
+        return Rect(
+            centre_x - size.width / 2.0,
+            centre_y - size.height / 2.0,
+            size,
+            centre_x + size.width / 2.0,
+            centre_y + size.height / 2.0,
+            centre_x,
+            centre_y
+        )
 
 
     def matched_centre(self, other_rect):
         return Rect.make_with_size(
             other_rect.centre_x - self.size.width / 2.0,
-            other_rect.centre_y - self.y,
-            self.centre
+            other_rect.centre_y - self.size.height / 2.0,
+            self.size
         )
 
 
@@ -126,6 +113,22 @@ class Rect:
 
         return Size.make_with_size(new_x, new_y, self.size)
 
+    # self.x = float(x)
+    # self.y = float(y)
+    # self.size = size
+    # self.end_x = float(end_x)
+    # self.end_y = float(end_y)
+    # # self.aspect_ratio = size.aspect_ratio
+    # # self.aspect_ratio_inv = size.aspect_ratio_inv
+    # self.area = size.area
+    # self.centre_x = float(centre_x)
+    # self.centre_y = float(centre_y)
+    #
+    #
+    def __eq__(self, other):
+        return self.x == other.x and self.y == other.y and self.size == other.size and self.end_x == other.end_x \
+            and self.end_y == other.end_y and self.area == other.area and self.centre_x == other.centre_x and self.centre_y == other.centre_y
+
 
     def __str__(self):
         return f"Rect({self.x}, {self.y}, {self.end_x}, {self.end_y})"
@@ -152,3 +155,12 @@ class TestRect(unittest.TestCase):
         self.assertEqual(r.size.height, 100)
         self.assertEqual(r.size.aspect_ratio, 2.0)
         self.assertEqual(r.size.aspect_ratio_inv, 1.0/2.0)
+
+
+    def test_matched_centre(self):
+        r1 = Rect.make_with_size(-10, -20, Size.make(200, 100))
+        r2 = Rect.make_with_size(1000, 2000, Size.make(200, 100))
+
+        print(f"matching: ", r1.matched_centre(r2))
+        # self.assertEqual(r1.matched_centre(r2), Rect.make_with_centre_and_size(r2.centre_x, r2.centre_y, Size.make(200, 100)), f"{r1.__str__()} != {r2.__str__()}")
+        self.assertEqual(r1.matched_centre(r2), r2, f"{r1.matched_centre(r2).__str__()} != {r2.__str__()}")
