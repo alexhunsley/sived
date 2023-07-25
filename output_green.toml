@@ -21,10 +21,19 @@ desc = "green test"
 
 [[video.segments]]
 # only end time, so start at clip start
-end_time = "00:00:30"
-# clip_rect = { x = 50, y = 50, end_x = 430, end_y = 220 }
+end_time = "00:00:02"
+clip_rect = { x = 0, y = 0, end_x = 512, end_y = 384 }
 tags = ["tag1", "tag2"]
 desc = "green test1"
+
+
+[[video.segments]]
+start_time = "00:00:08"
+end_time = "00:00:10"
+clip_rect = { x = 512, y = 384, end_x = 1024, end_y = 768 }
+tags = ["tag1", "tag2"]
+desc = "green test1b"
+watermark_position = [-1, -1]
 
 # [[video.segments]]
 # # only start time, so end at clip end
