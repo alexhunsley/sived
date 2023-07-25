@@ -8,8 +8,8 @@ from .maths import Maths
 # @dataclass(frozen=True, order=True)
 class Size:
     def __init__(self, width, height):
-        self.width = width
-        self.height = height
+        self.width = abs(width)
+        self.height = abs(height)
         self.aspect_ratio = width / height if height != 0 else None
         self.aspect_ratio_inv = height / width if height != 0 else None
         self.area = width * height
@@ -65,6 +65,14 @@ class Size:
 class TestSize(unittest.TestCase):
     def test_make(self):
         s = Size.make(2.0, 3.0)
+        self.assertEqual(s.width, 2.0)
+        self.assertEqual(s.height, 3.0)
+        self.assertEqual(s.aspect_ratio, 2.0 / 3.0)
+        self.assertEqual(s.area, 2.0 * 3.0)
+
+
+    def test_abs_sizing(self):
+        s = Size.make(-2.0, -3.0)
         self.assertEqual(s.width, 2.0)
         self.assertEqual(s.height, 3.0)
         self.assertEqual(s.aspect_ratio, 2.0 / 3.0)

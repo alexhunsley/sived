@@ -2,10 +2,9 @@
 
 import unittest
 from .size import *
+from .helpers import asc
 
 
-# @functools.total_ordering
-# @dataclass(frozen=True, order=True)
 class Rect:
     def __init__(self, x, y, size, end_x, end_y, centre_x, centre_y):
         self.x = float(x)
@@ -13,8 +12,6 @@ class Rect:
         self.size = size
         self.end_x = float(end_x)
         self.end_y = float(end_y)
-        # self.aspect_ratio = size.aspect_ratio
-        # self.aspect_ratio_inv = size.aspect_ratio_inv
         self.area = size.area
         self.centre_x = float(centre_x)
         self.centre_y = float(centre_y)
@@ -30,6 +27,8 @@ class Rect:
 
     @classmethod
     def make_with_end_coords(cls, x, y, end_x, end_y):
+        x, end_x = asc(x, end_x)
+        y, end_y = asc(y, end_y)
         return Rect(
             x,
             y,
@@ -85,8 +84,8 @@ class Rect:
 
     def match_size_maintaining_centre(self, other_rect):
         return Rect.make_with_size(
-            self.x - other_rect.size.x / 2,
-            self.y - other_rect.size.y / 2,
+            self.x - other_rect.size.width / 2,
+            self.y - other_rect.size.height / 2,
             other_rect.size
         )
 
@@ -113,28 +112,24 @@ class Rect:
 
         return Size.make_with_size(new_x, new_y, self.size)
 
-    # self.x = float(x)
-    # self.y = float(y)
-    # self.size = size
-    # self.end_x = float(end_x)
-    # self.end_y = float(end_y)
-    # # self.aspect_ratio = size.aspect_ratio
-    # # self.aspect_ratio_inv = size.aspect_ratio_inv
-    # self.area = size.area
-    # self.centre_x = float(centre_x)
-    # self.centre_y = float(centre_y)
-    #
-    #
+
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y and self.size == other.size and self.end_x == other.end_x \
             and self.end_y == other.end_y and self.area == other.area and self.centre_x == other.centre_x and self.centre_y == other.centre_y
 
 
     def __str__(self):
-        return f"Rect({self.x}, {self.y}, {self.end_x}, {self.end_y})"
+        return f"Rect({self.x}, {self.y}, {self.end_x}, {self.end_y})[centre ({self.centre_x}, {self.centre_y}) size ({self.size.width}, {self.size.height})]"
 
 
 class TestRect(unittest.TestCase):
+    def test_coord_fixing(self):
+        r = Rect.make_with_end_coords(1000, 2000, 210, 120)
+        self.assertEqual(r, Rect.make_with_end_coords(210, 120, 1000, 2000))
+        r = Rect.make_with_end_coords(-1000, 2000, 210, 120)
+        self.assertEqual(r, Rect.make_with_end_coords(-1000, 120, 210, 2000))
+
+
     def test_make_with_end_coords(self):
         r = Rect.make_with_end_coords(10, 20, 210, 120)
         self.assertEqual(r.x, 10)
@@ -147,10 +142,9 @@ class TestRect(unittest.TestCase):
 
 
     def test_make_with_size(self):
-        r = Rect.make_with_size(10, 20, Size.make(200, 100))
-        self.assertEqual(r.x, 10)
-        self.assertEqual(r.y, 20)
-        self.assertEqual(r.size.width, 200)
+        r = Rect.make_with_size(-15, -35, Size.make(200, 100))
+        self.assertEqual(r.x, -15)
+        self.assertEqual(r.y, -35)
         self.assertEqual(r.size.width, 200)
         self.assertEqual(r.size.height, 100)
         self.assertEqual(r.size.aspect_ratio, 2.0)
@@ -159,8 +153,36 @@ class TestRect(unittest.TestCase):
 
     def test_matched_centre(self):
         r1 = Rect.make_with_size(-10, -20, Size.make(200, 100))
-        r2 = Rect.make_with_size(1000, 2000, Size.make(200, 100))
+        r2 = Rect.make_with_size(1000, 2000, Size.make(40, 10))
+        r_expect = Rect.make_with_size(920.0, 1955.0, Size.make(200, 100))
 
-        print(f"matching: ", r1.matched_centre(r2))
-        # self.assertEqual(r1.matched_centre(r2), Rect.make_with_centre_and_size(r2.centre_x, r2.centre_y, Size.make(200, 100)), f"{r1.__str__()} != {r2.__str__()}")
-        self.assertEqual(r1.matched_centre(r2), r2, f"{r1.matched_centre(r2).__str__()} != {r2.__str__()}")
+        self.assertEqual(r1.matched_centre(r2), r_expect, f"{r1.matched_centre(r2).__str__()} != {r_expect.__str__()}")
+
+
+    def test_matched_size(self):
+        r1 = Rect.make_with_size(-10, -20, Size.make(200, 100))
+        r2 = Rect.make_with_size(1000, 2000, Size.make(40, 10))
+        # r_expect = Rect.make_with_centre_and_size(0, 0, Size(0, 0)) #r1.centre_x, r1.centre_y, r2.size)
+        r_expect = Rect.make_with_end_coords(-10, -20, 30, -10) #r1.centre_x, r1.centre_y, r2.size)
+
+        self.assertEqual(r1.matched_size(r2), r_expect, f"{r1.matched_size(r2).__str__()} != {r_expect.__str__()}")
+
+
+    def test_matched_size(self):
+        r1 = Rect.make_with_size(-10, -20, Size.make(200, 100))
+        r2 = Rect.make_with_size(1000, 2000, Size.make(40, 10))
+        # r_expect = Rect.make_with_centre_and_size(0, 0, Size(0, 0)) #r1.centre_x, r1.centre_y, r2.size)
+        r_expect = Rect.make_with_end_coords(-30.0, -25.0, 10.0, -15.0)
+
+        self.assertEqual(r1.match_size_maintaining_centre(r2), r_expect, f"{r1.match_size_maintaining_centre(r2).__str__()} != {r_expect.__str__()}")
+
+
+    def test_reversed_coords(self):
+        r1 = Rect.make_with_end_coords(150, 170, 120, 160)
+        # r_expect = Rect.make_with_centre_and_size(0, 0, Size(0, 0)) #r1.centre_x, r1.centre_y, r2.size)
+        r_expect = Rect.make_with_end_coords(120, 160, 150, 170)
+
+        print(f"r1 = ", r1)
+
+        print(f"r_expect = {r_expect}")
+        self.assertEqual(r1, r_expect, f"{r1.__str__()} != {r_expect.__str__()}")
