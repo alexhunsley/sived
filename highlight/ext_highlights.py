@@ -24,8 +24,7 @@ show_seg_number = False
 
 use_threads = 8
 
-Sz = namedtuple('Sz', 'width height')
-
+# Sz = namedtuple('Sz', 'width height')
 # sz = Sz(1, 2)
 # print(sz)
 # sys.exit(0)
@@ -54,6 +53,8 @@ Sz = namedtuple('Sz', 'width height')
 toml_base_filename = None
 
 make_concatenation_video = True
+# make_concatenation_video = False
+
 force_overwrite_existing = True
 
 working_dir = os.getcwd()
@@ -61,11 +62,8 @@ working_dir = os.getcwd()
 limit_segs = None
 
 
-from .spec import *
 from .helpers import *
 from .image import *
-from .time import *
-from .size import *
 
 
 # idea:
@@ -106,9 +104,10 @@ def add_text(clip, text):
     return CompositeVideoClip([clip, txt_clip])
 
 
-# clip_rect is for just this segment. It might be actual seg rect or the union'd rect.
-# segment_clip_rect the segment's own clip rect as per toml.
-def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segment_clip_rect):
+# use_clip_rect is either the actual seg rect or the union'd rect (for a concat video).
+# segment_clip_rect is always the segment's own clip rect as per toml. (Defaults to input video frame
+# if not specified for a segment.)
+def process_segment(video_path, idx, desc, segment, video_data, use_clip_rect, segment_clip_rect):
     # filename without extension
     # video_base_filename = os.path.splitext(os.path.basename(video_path))[0]
 
@@ -135,9 +134,9 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
         print(f"found a grab_frame: {grab_frame}")
         # Convert the frame to an ImageClip
         
-        frame = video_clip.get_frame(grab_frame['time']) 
+        numpy_img_frame = video_clip.get_frame(grab_frame['time'])
 
-        clip = ImageClip(frame, duration=grab_frame['duration'])
+        clip = ImageClip(numpy_img_frame, duration=grab_frame['duration'])
         # doesn't work, interacts with the xy flip further down? video corrupts as still image plays.
         # clip = (ImageClip(frame, duration=grab_frame['duration'])
         #     .resize(lambda t : 1+0.02*t)
@@ -156,9 +155,8 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
         start_time = get_start_time(segment, video_data)
         end_time = get_end_time(segment, video_data, f"{clip.duration}")
 
-        # Trim
+        # Trim to time interval
         clip = clip.subclip(start_time, end_time)
-        clip_duration = clip.duration  # keep track of the duration
 
         # this command shows -90 for a video, but clip.rotation comes back 0!
         # and in fact I need to invert x and y, NOT do rotate.
@@ -172,18 +170,18 @@ def process_segment(video_path, idx, desc, segment, video_data, clip_rect, segme
 
         # Crop the video if clip_rect is specified
         # order of crop and resize matters.
-        clip = clip.fx(crop, x1=clip_rect['x'], y1=clip_rect['y'], x2=clip_rect['end_x'], y2=clip_rect['end_y'])
+        clip = clip.fx(crop, x1=use_clip_rect['x'], y1=use_clip_rect['y'], x2=use_clip_rect['end_x'], y2=use_clip_rect['end_y'])
 
     if get_temp_transpose_xy_size(segment, video_data):
         clip = clip.resize(clip.size[::-1])
 
     #  {'x': 128, 'y': 128, 'end_x': 896, 'end_y': 640}
-    print(f" clip_rect = {clip_rect}")
+    print(f" clip_rect = {use_clip_rect}")
     print(f" segment_clip_rect = {segment_clip_rect}")
     # sys.exit(0)
 
     # segment_clip_rect has the x, y we need for clip_offset_in_context
-    clip = apply_watermark(clip, clip_rect, segment_clip_rect, segment, video_data)
+    clip = apply_watermark(clip, use_clip_rect, segment_clip_rect, segment, video_data)
 
     # Zoom in over time - the image will zoom in by 5% per second
     # zoom_in_clip = img.fx(lambda t: img.resize(1 + 0.05*t))
@@ -252,7 +250,8 @@ def process_video_toml(toml_file):
             rect = get_clip_rect(segment, video_data) 
 
             if not rect:
-                rect = {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]}
+                max_clip_rect = {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]}
+                break
 
             print(f"   IN MIN/MAX, befpre comp, clip rect {rect} and max_clip_rect is {max_clip_rect}")
 
@@ -281,7 +280,7 @@ def process_video_toml(toml_file):
         print(f"=-=-==-=      ... use_clip_rect for {idx} = {use_clip_rect}")
 
         desc = get_desc(segment, video_data)
-        output_clip = process_segment(video_path, idx, desc, segment, video_data, use_clip_rect, segment_clip_rect) #, max_clip_rect if make_concatenation_video else None)
+        output_clip = process_segment(video_path, idx, desc, segment, video_data, use_clip_rect, segment_clip_rect)
 
         if make_concatenation_video:
             # Determine fade duration from the TOML data

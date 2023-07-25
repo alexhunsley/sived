@@ -370,9 +370,9 @@ def calc_watermark_position(video_clip_rect, watermark_size, watermark_position,
 
 
 # applies a watermark if necessary, returning the resulting clip (or the original clip otherwise)
-def apply_watermark(clip, clip_rect, clip_offset_in_context, segment, video_data):
+def apply_watermark(clip, use_clip_rect, segment_clip_rect, segment, video_data):
 
-    print(f"  >>>> apply_watermark: clip: {clip} clip_rect: {clip_rect} clip_offset_in_context: {clip_offset_in_context}")
+    print(f"  >>>> apply_watermark: clip: {clip} clip_rect: {use_clip_rect} clip_offset_in_context: {segment_clip_rect}")
 
     # global make_concatenation_video
 
@@ -399,26 +399,26 @@ def apply_watermark(clip, clip_rect, clip_offset_in_context, segment, video_data
     # Set the image clip's duration to match the video clip's
     img = img.set_duration(clip.duration)
 
-    # Decide watermark position
+    # toml 'watermark_position'
     watermark_position = get_watermark_position(segment, video_data)
 
     watermark_offset_in_context = {}
 
-    print(f"apply_watermark   clip_rect = {clip_rect}")
-    print(f"apply_watermark   clip_offset_in_context = {clip_offset_in_context}")
+    print(f"apply_watermark   clip_rect = {use_clip_rect}")
+    print(f"apply_watermark   clip_offset_in_context = {segment_clip_rect}")
 
-    print(f"sadsadsad {clip_offset_in_context['end_x']}")
+    print(f"sadsadsad {segment_clip_rect['end_x']}")
 
     if make_concatenation_video:
-        watermark_offset_in_context['x'] = clip_offset_in_context['x'] - clip_rect['x']
-        watermark_offset_in_context['y'] = clip_offset_in_context['y'] - clip_rect['y']
-        watermark_offset_in_context['end_x'] = clip_offset_in_context['end_x'] # - clip_rect['end_x']
-        watermark_offset_in_context['end_y'] = clip_offset_in_context['end_y'] # - clip_rect['end_y']
+        watermark_offset_in_context['x'] = segment_clip_rect['x'] - use_clip_rect['x']
+        watermark_offset_in_context['y'] = segment_clip_rect['y'] - use_clip_rect['y']
+        watermark_offset_in_context['end_x'] = segment_clip_rect['end_x'] # - clip_rect['end_x']
+        watermark_offset_in_context['end_y'] = segment_clip_rect['end_y'] # - clip_rect['end_y']
         # print(f"Made a watermark_offset_in_context: {watermark_offset_in_context} from seg clip_rect = {clip_rect}")
 
     print("sadsadsad2")
     
-    watermark_position = calc_watermark_position(clip_offset_in_context, img.size, watermark_position, watermark_offset_in_context)
+    watermark_position = calc_watermark_position(segment_clip_rect, img.size, watermark_position, watermark_offset_in_context)
 
     # a composite video clip with the watermark image overlay
     return CompositeVideoClip([clip, img.set_position(watermark_position)])
