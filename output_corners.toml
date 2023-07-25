@@ -12,7 +12,8 @@ video_filename = "output_blue_larger_res.mp4"
 # watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
 watermark_filename = "v=grid1.png=(grid2.png=grid3.png)"
 #clip_rect = { x = 128, y = 128, end_x = 896, end_y = 640 }
-clip_rect = { x = 256, y = 192, end_x = 768, end_y = 576 }
+#clip_rect = { x = 256, y = 192, end_x = 768, end_y = 576 }
+clip_rect = { x = 400, y = 100, end_x = 624, end_y = 668 }
 # path prepending all non-absolute watermark files
 watermark_home = "images"
 
@@ -24,8 +25,6 @@ end_time = "1.5"
 
 watermark_dimension = 200
 desc = "green test"
-
-
 
 # h
 
@@ -63,125 +62,126 @@ watermark_position = [0, -1]
 
 [[video.segments]]
 watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [0, -2]
-
-
-[[video.segments]]
 clip_rect = { x = 0, y = 0, end_x = 1024, end_y = 768 }
-# clip_rect = { x = 150, y = 200, end_x = 1024, end_y = 768 }
-
-
-[[video.segments]]
-clip_rect = { x = 0, y = 0, end_x = 1024, end_y = 768 }
-watermark_position = [-1, -1]
-
-
-# # v (inherited watermark layout mode)
-
-[[video.segments]]
-watermark_position = [-2, -2]
-
-[[video.segments]]
-watermark_position = [0, 0]
-
-[[video.segments]]
-watermark_position = [-2, 0]
-
-[[video.segments]]
-watermark_position = [-1, 0]
-
-[[video.segments]]
-watermark_position = [-1, -2]
-
-[[video.segments]]
-watermark_position = [-1, -1]
-
-[[video.segments]]
-watermark_position = [-2, -1]
-
-[[video.segments]]
-watermark_position = [0, -1]
-
-[[video.segments]]
 watermark_position = [0, -2]
 
-
-# H
-
-[[video.segments]]
-watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [-2, -2]
-
-[[video.segments]]
-watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [0, 0]
-
-[[video.segments]]
-watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [-2, 0]
-
-[[video.segments]]
-watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [-1, 0]
-
-[[video.segments]]
-watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [-1, -2]
-
-[[video.segments]]
-watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [-1, -1]
-
-[[video.segments]]
-watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [-2, -1]
-
-[[video.segments]]
-watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [0, -1]
-
-[[video.segments]]
-watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [0, -2]
-
-
-
-# V
-
-[[video.segments]]
-watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [-2, -2]
-
-[[video.segments]]
-watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [0, 0]
-
-[[video.segments]]
-watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [-2, 0]
-
-[[video.segments]]
-watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [-1, 0]
-
-[[video.segments]]
-watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [-1, -2]
-
-[[video.segments]]
-watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [-1, -1]
-
-[[video.segments]]
-watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [-2, -1]
-
-[[video.segments]]
-watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [0, -1]
-
-[[video.segments]]
-watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [0, -2]
+#
+#[[video.segments]]
+#clip_rect = { x = 0, y = 0, end_x = 1024, end_y = 768 }
+## clip_rect = { x = 150, y = 200, end_x = 1024, end_y = 768 }
+#
+#
+#[[video.segments]]
+#clip_rect = { x = 0, y = 0, end_x = 1024, end_y = 768 }
+#watermark_position = [-1, -1]
+#
+#
+## # v (inherited watermark layout mode)
+#
+#[[video.segments]]
+#watermark_position = [-2, -2]
+#
+#[[video.segments]]
+#watermark_position = [0, 0]
+#
+#[[video.segments]]
+#watermark_position = [-2, 0]
+#
+#[[video.segments]]
+#watermark_position = [-1, 0]
+#
+#[[video.segments]]
+#watermark_position = [-1, -2]
+#
+#[[video.segments]]
+#watermark_position = [-1, -1]
+#
+#[[video.segments]]
+#watermark_position = [-2, -1]
+#
+#[[video.segments]]
+#watermark_position = [0, -1]
+#
+#[[video.segments]]
+#watermark_position = [0, -2]
+#
+#
+## H
+#
+#[[video.segments]]
+#watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
+#watermark_position = [-2, -2]
+#
+#[[video.segments]]
+#watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
+#watermark_position = [0, 0]
+#
+#[[video.segments]]
+#watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
+#watermark_position = [-2, 0]
+#
+#[[video.segments]]
+#watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
+#watermark_position = [-1, 0]
+#
+#[[video.segments]]
+#watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
+#watermark_position = [-1, -2]
+#
+#[[video.segments]]
+#watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
+#watermark_position = [-1, -1]
+#
+#[[video.segments]]
+#watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
+#watermark_position = [-2, -1]
+#
+#[[video.segments]]
+#watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
+#watermark_position = [0, -1]
+#
+#[[video.segments]]
+#watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
+#watermark_position = [0, -2]
+#
+#
+#
+## V
+#
+#[[video.segments]]
+#watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
+#watermark_position = [-2, -2]
+#
+#[[video.segments]]
+#watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
+#watermark_position = [0, 0]
+#
+#[[video.segments]]
+#watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
+#watermark_position = [-2, 0]
+#
+#[[video.segments]]
+#watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
+#watermark_position = [-1, 0]
+#
+#[[video.segments]]
+#watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
+#watermark_position = [-1, -2]
+#
+#[[video.segments]]
+#watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
+#watermark_position = [-1, -1]
+#
+#[[video.segments]]
+#watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
+#watermark_position = [-2, -1]
+#
+#[[video.segments]]
+#watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
+#watermark_position = [0, -1]
+#
+#[[video.segments]]
+#watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
+#watermark_position = [0, -2]
 
 

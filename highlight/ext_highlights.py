@@ -14,6 +14,9 @@ from moviepy.video.VideoClip import ColorClip
 
 from collections import namedtuple
 
+from .rect import *
+from .size import *
+
 # TO FIX:
 #
 # centre and right/bottom align isn't working because we're using first image dimension, not all!
@@ -172,7 +175,25 @@ def process_segment(video_path, idx, desc, segment, video_data, use_clip_rect, s
         # order of crop and resize matters.
         #    TODO don't use this stuff if it's a NOP! (i.e. crop and resize)
         # clip = clip.fx(crop, x1=use_clip_rect['x'], y1=use_clip_rect['y'], x2=use_clip_rect['end_x'], y2=use_clip_rect['end_y'])
-        clip = clip.fx(crop, x1=segment_clip_rect['x'], y1=segment_clip_rect['y'], x2=segment_clip_rect['end_x'], y2=segment_clip_rect['end_y'])
+
+
+        print(f" different use_clip_rect and segment_clip_rect, so resizing. : {use_clip_rect} {segment_clip_rect}")
+
+        # aspect fit so weird aspects for clips don't munt the output aspect ratio
+
+        segment_clip_rect_r = Rect.make_with_end_coords(segment_clip_rect['x'], segment_clip_rect['y'], segment_clip_rect['end_x'], segment_clip_rect['end_y'])
+
+        use_clip_rect_r = Rect.make_with_end_coords(use_clip_rect['x'], use_clip_rect['y'], use_clip_rect['end_x'], use_clip_rect['end_y'])
+
+        # fl = use_clip_rect_r.size.aspect_filled_to(segment_clip_rect_r.size)
+        fl = use_clip_rect_r.size.aspect_fitted_to(segment_clip_rect_r.size)
+
+        r = Rect.make_with_centre_and_size(segment_clip_rect_r.centre_x, segment_clip_rect_r.centre_y, fl)
+
+        print(f" filled: {use_clip_rect_r} fitted to {segment_clip_rect_r} gives asp {fl}, so final r = {r}")
+
+        # clip = clip.fx(crop, x1=segment_clip_rect['x'], y1=segment_clip_rect['y'], x2=segment_clip_rect['end_x'], y2=segment_clip_rect['end_y'])
+        clip = clip.fx(crop, x1=r.x, y1=r.y, x2=r.end_x, y2=r.end_y)
 
         # if use_clip_rect != segment_clip_rect:
         #     print(f" different use_clip_rect and segment_clip_rect, so resizing. : {use_clip_rect} {segment_clip_rect}")
@@ -192,16 +213,38 @@ def process_segment(video_path, idx, desc, segment, video_data, use_clip_rect, s
     # sys.exit(0)
 
     # segment_clip_rect has the x, y we need for clip_offset_in_context
+    # TODO need to use stuff from above!
     clip = apply_watermark(clip, segment_clip_rect, segment_clip_rect, segment, video_data)
     # clip = apply_watermark(clip, use_clip_rect, segment_clip_rect, segment, video_data)
 
+    # clip = apply_watermark(clip, use_clip_rect, segment_clip_rect, segment, video_data)
+
     if use_clip_rect != segment_clip_rect:
-        print(f" different use_clip_rect and segment_clip_rect, so resizing. : {use_clip_rect} {segment_clip_rect}")
+        # print(f" different use_clip_rect and segment_clip_rect, so resizing. : {use_clip_rect} {segment_clip_rect}")
+        #
+        # # aspect fit so weird aspects for clips don't munt the output aspect ratio
+        #
+        # segment_clip_rect_r = Rect.make_with_end_coords(segment_clip_rect['x'], segment_clip_rect['y'], segment_clip_rect['end_x'], segment_clip_rect['end_y'])
+        #
+        # use_clip_rect_r = Rect.make_with_end_coords(use_clip_rect['x'], use_clip_rect['y'], use_clip_rect['end_x'], use_clip_rect['end_y'])
+        #
+        # # fl = use_clip_rect_r.size.aspect_filled_to(segment_clip_rect_r.size)
+        # fl = use_clip_rect_r.size.aspect_fitted_to(segment_clip_rect_r.size)
+        #
+        # print(f" filled: {use_clip_rect_r} fitted to {segment_clip_rect_r} gives {fl}")
+
+        # sys.exit(0)
+
+        # use_clip_rect_r = Size.make(ww, hh).
+
+        # print(f" got ww, hh = {ww}, {hh}")
+        # sys.exit(0)
+
+
+        # clip = clip.resize((fl.width, fl.height))
 
         ww = use_clip_rect['end_x'] - use_clip_rect['x']
         hh = use_clip_rect['end_y'] - use_clip_rect['y']
-        print(f" got ww, hh = {ww}, {hh}")
-        # sys.exit(0)
         clip = clip.resize((ww, hh))
 
     # Zoom in over time - the image will zoom in by 5% per second
