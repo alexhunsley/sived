@@ -11,7 +11,8 @@ video_filename = "output_blue_larger_res.mp4"
 # watermark_filename = "H=(grid1.png=grid2.png)=(grid3.png=(grid4.png=grid1.png=grid2.png))"
 # watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
 watermark_filename = "v=grid1.png=(grid2.png=grid3.png)"
-clip_rect = { x = 128, y = 128, end_x = 896, end_y = 640 }
+#clip_rect = { x = 128, y = 128, end_x = 896, end_y = 640 }
+clip_rect = { x = 256, y = 192, end_x = 768, end_y = 576 }
 # path prepending all non-absolute watermark files
 watermark_home = "images"
 

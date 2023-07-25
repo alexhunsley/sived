@@ -170,7 +170,18 @@ def process_segment(video_path, idx, desc, segment, video_data, use_clip_rect, s
 
         # Crop the video if clip_rect is specified
         # order of crop and resize matters.
-        clip = clip.fx(crop, x1=use_clip_rect['x'], y1=use_clip_rect['y'], x2=use_clip_rect['end_x'], y2=use_clip_rect['end_y'])
+        #    TODO don't use this stuff if it's a NOP! (i.e. crop and resize)
+        # clip = clip.fx(crop, x1=use_clip_rect['x'], y1=use_clip_rect['y'], x2=use_clip_rect['end_x'], y2=use_clip_rect['end_y'])
+        clip = clip.fx(crop, x1=segment_clip_rect['x'], y1=segment_clip_rect['y'], x2=segment_clip_rect['end_x'], y2=segment_clip_rect['end_y'])
+
+        # if use_clip_rect != segment_clip_rect:
+        #     print(f" different use_clip_rect and segment_clip_rect, so resizing. : {use_clip_rect} {segment_clip_rect}")
+        #
+        #     ww = use_clip_rect['end_x'] - use_clip_rect['x']
+        #     hh = use_clip_rect['end_y'] - use_clip_rect['y']
+        #     print(f" got ww, hh = {ww}, {hh}")
+        #     # sys.exit(0)
+        #     clip = clip.resize((ww, hh))
 
     if get_temp_transpose_xy_size(segment, video_data):
         clip = clip.resize(clip.size[::-1])
@@ -181,7 +192,17 @@ def process_segment(video_path, idx, desc, segment, video_data, use_clip_rect, s
     # sys.exit(0)
 
     # segment_clip_rect has the x, y we need for clip_offset_in_context
-    clip = apply_watermark(clip, use_clip_rect, segment_clip_rect, segment, video_data)
+    clip = apply_watermark(clip, segment_clip_rect, segment_clip_rect, segment, video_data)
+    # clip = apply_watermark(clip, use_clip_rect, segment_clip_rect, segment, video_data)
+
+    if use_clip_rect != segment_clip_rect:
+        print(f" different use_clip_rect and segment_clip_rect, so resizing. : {use_clip_rect} {segment_clip_rect}")
+
+        ww = use_clip_rect['end_x'] - use_clip_rect['x']
+        hh = use_clip_rect['end_y'] - use_clip_rect['y']
+        print(f" got ww, hh = {ww}, {hh}")
+        # sys.exit(0)
+        clip = clip.resize((ww, hh))
 
     # Zoom in over time - the image will zoom in by 5% per second
     # zoom_in_clip = img.fx(lambda t: img.resize(1 + 0.05*t))
