@@ -275,7 +275,7 @@ def process_video_toml(toml_file):
         if not segment_clip_rect:
             segment_clip_rect = {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]}
                 
-        use_clip_rect = max_clip_rect if make_concatenation_video == True else segment_clip_rect
+        use_clip_rect = max_clip_rect if make_concatenation_video else segment_clip_rect
 
         print(f"=-=-==-=      ... use_clip_rect for {idx} = {use_clip_rect}")
 
