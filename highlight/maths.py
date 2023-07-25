@@ -30,6 +30,17 @@ class Maths:
         return min(a, b) if a < 1 and b < 1 else max(a, b)
 
 
+    @classmethod
+    def avg(cls, a, b):
+        return (a + b) / 2
+
+
+    # returns values ascending
+    @classmethod
+    def asc(cls, a, b):
+        return min(a, b), max(a, b)
+
+
 class TestMaths(unittest.TestCase):
     def test_clip(self):
         self.assertEqual(Maths.clip(5, 1, 10), 5)

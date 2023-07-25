@@ -32,12 +32,17 @@ class Size:
         return self.scaled(scale_factor)
 
 
-    def aspect_fitted_to(self, other_size):
-        return self.scaled_to(other_size, Maths.min_ratio)
+    def aspect_fitted_to(self, other_size, z_min=None, z_max=None):
+        return self.scaled_to(other_size, Maths.min_ratio, z_min, z_max)
 
 
-    def aspect_filled_to(self, other_size):
-        return self.scaled_to(other_size, Maths.max_ratio)
+    def aspect_filled_to(self, other_size, z_min=None, z_max=None):
+        return self.scaled_to(other_size, Maths.max_ratio, z_min, z_max)
+
+
+    # A large man tries to walk into a bar but he's too big. So he's half filled, half fitted: he's fillited.
+    def aspect_fillited_to(self, other_size, z_min=None, z_max=None):
+        return self.scaled_to(other_size, Maths.avg, z_min, z_max)
 
 
     # def __lt__(self, other):
@@ -122,4 +127,3 @@ class TestSize(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-

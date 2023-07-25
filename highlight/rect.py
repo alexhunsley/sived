@@ -2,7 +2,7 @@
 
 import unittest
 from .size import *
-from .helpers import asc
+from .maths import *
 
 
 class Rect:
@@ -27,8 +27,8 @@ class Rect:
 
     @classmethod
     def make_with_end_coords(cls, x, y, end_x, end_y):
-        x, end_x = asc(x, end_x)
-        y, end_y = asc(y, end_y)
+        x, end_x = Maths.asc(x, end_x)
+        y, end_y = Maths.asc(y, end_y)
         return Rect(
             x,
             y,
@@ -182,7 +182,4 @@ class TestRect(unittest.TestCase):
         # r_expect = Rect.make_with_centre_and_size(0, 0, Size(0, 0)) #r1.centre_x, r1.centre_y, r2.size)
         r_expect = Rect.make_with_end_coords(120, 160, 150, 170)
 
-        print(f"r1 = ", r1)
-
-        print(f"r_expect = {r_expect}")
         self.assertEqual(r1, r_expect, f"{r1.__str__()} != {r_expect.__str__()}")

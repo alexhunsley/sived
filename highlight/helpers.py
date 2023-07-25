@@ -31,7 +31,3 @@ from .ext_highlights import working_dir
 def make_abs_path_rel_to_working_dir(rel_path):
     return os.path.normpath(os.path.join(working_dir, rel_path))
 
-
-
-def asc(a, b):
-    return min(a, b), max(a, b)
