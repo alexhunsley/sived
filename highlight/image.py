@@ -315,17 +315,20 @@ def paste_images_on_canvas(images, canvas, layout):
 #======================================
 
 
-def calc_watermark_position(video_clip_rect, watermark_size, watermark_position, segment_offset_inside_context):
+def calc_watermark_position(use_clip_rect, segment_clip_rect, watermark_size, watermark_position):
 
-    print(f"get_watermark_position: video_clip_rect = {video_clip_rect}, watermark_size = {watermark_size}, watermark_position = {watermark_position}, segment_offset_inside_context = {segment_offset_inside_context}")
+    # think it's just the same!
+    # segment_offset_inside_context = segment_clip_rect
+
+    print(f"get_watermark_position: use_clip_rect = {use_clip_rect}, segment_clip_rect = {segment_clip_rect}, watermark_size = {watermark_size}, watermark_position = {watermark_position}")
 
     wp_dict = dict(enumerate(watermark_position))
 
     # Get the video width and height
     # _, _, video_width, video_height = video_clip_rect
 
-    video_width = segment_offset_inside_context['end_x'] - segment_offset_inside_context['x']
-    video_height = segment_offset_inside_context['end_y'] - segment_offset_inside_context['y']
+    video_width = segment_clip_rect['end_x'] - segment_clip_rect['x']
+    video_height = segment_clip_rect['end_y'] - segment_clip_rect['y']
 
     # print(f"GOT VID WID, HEI: {video_width} {video_height}")
     # Get the watermark width and height
@@ -354,8 +357,11 @@ def calc_watermark_position(video_clip_rect, watermark_size, watermark_position,
     elif watermark_position[1] == "top":
         y = 0
 
-    watermark_pos = (x + segment_offset_inside_context['x'], y + segment_offset_inside_context['y'])
-    print(f"  >>>> get_watermark_position: to xy of {x} {y} am adding segment_offset_inside_context = {segment_offset_inside_context}, final: watermark_pos")
+    segment_offset_x = segment_clip_rect['x'] - use_clip_rect['x']
+    segment_offset_y = segment_clip_rect['x'] - use_clip_rect['x']
+
+    watermark_pos = (x + segment_offset_x, y + segment_offset_y)
+    print(f"  >>>> get_watermark_position: to xy of {x} {y} am adding segment_offset_x, y = {segment_offset_x}, {segment_offset_y}, final: watermark_pos")
     return watermark_pos
 
 
@@ -369,7 +375,8 @@ def calc_watermark_position(video_clip_rect, watermark_size, watermark_position,
 # sys.exit(1)
 
 
-# applies a watermark if necessary, returning the resulting clip (or the original clip otherwise)
+# applies a watermark if necessary, returning the resulting clip (or the original clip otherwise).
+# use_clip_rect is either segment_clip_rect or the union rect of all clip rects (concat mode).
 def apply_watermark(clip, use_clip_rect, segment_clip_rect, segment, video_data):
 
     print(f"  >>>> apply_watermark: clip: {clip} clip_rect: {use_clip_rect} clip_offset_in_context: {segment_clip_rect}")
@@ -418,7 +425,7 @@ def apply_watermark(clip, use_clip_rect, segment_clip_rect, segment, video_data)
 
     print("sadsadsad2")
     
-    watermark_position = calc_watermark_position(segment_clip_rect, img.size, watermark_position, watermark_offset_in_context)
+    watermark_position = calc_watermark_position(use_clip_rect, segment_clip_rect, img.size, watermark_position)
 
     # a composite video clip with the watermark image overlay
     return CompositeVideoClip([clip, img.set_position(watermark_position)])
