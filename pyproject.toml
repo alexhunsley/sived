@@ -9,6 +9,7 @@ packages = [{include = "video_highlights"}]
 [tool.poetry.dependencies]
 python = "^3.10"
 moviepy = "^1.0.3"
+pillow = "9.5.0"
 
 [build-system]
 requires = ["poetry-core"]
