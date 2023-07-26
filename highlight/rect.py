@@ -113,6 +113,14 @@ class Rect:
         return Size.make_with_size(new_x, new_y, self.size)
 
 
+    def map(self, px, py, target_rect):
+        x_percent = (px - self.x) / self.size.width
+        y_percent = (py - self.y) / self.size.height
+
+        return (target_rect.x + x_percent * target_rect.size.width,
+                target_rect.y + y_percent * target_rect.size.height)
+
+
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y and self.size == other.size and self.end_x == other.end_x \
             and self.end_y == other.end_y and self.area == other.area and self.centre_x == other.centre_x and self.centre_y == other.centre_y
@@ -186,3 +194,30 @@ class TestRect(unittest.TestCase):
         r_expect = Rect.make_with_end_coords(120, 160, 150, 170)
 
         self.assertEqual(r1, r_expect, f"{r1.__str__()} != {r_expect.__str__()}")
+
+
+    def test_map(self):
+        r1 = Rect.unit_rect
+        r2 = Rect.make_with_size(0, 0, Size.make(10, 20))
+        p = r1.map(0, 0, r2)
+        self.assertEqual(p, (0.0, 0.0))
+
+        r1 = Rect.unit_rect
+        r2 = Rect.make_with_size(0, 0, Size.make(10, 20))
+        p = r1.map(0.5, 0.5, r2)
+        self.assertEqual(p, (5.0, 10.0))
+
+        r1 = Rect.unit_rect
+        r2 = Rect.make_with_size(-7, -16, Size.make(10, 20))
+        p = r1.map(0, 0, r2)
+        self.assertEqual(p, (-7, -16))
+
+        r1 = Rect.unit_rect
+        r2 = Rect.make_with_size(-7, -16, Size.make(10, 20))
+        p = r1.map(0.5, 0.5, r2)
+        self.assertEqual(p, (-2, -6))
+
+        r1 = Rect.unit_rect
+        r2 = Rect.make_with_size(-17, 66, Size.make(10, 20))
+        p = r1.map(1.0, 0.75, r2)
+        self.assertEqual(p, (-7, 81))
