@@ -67,6 +67,9 @@ class Size:
         return f"Size({self.width}, {self.height}, aspect: {self.aspect_ratio}, area: {self.area})"
 
 
+Size.unit_size = Size.make(1, 1)
+
+
 class TestSize(unittest.TestCase):
     def test_make(self):
         s = Size.make(2.0, 3.0)

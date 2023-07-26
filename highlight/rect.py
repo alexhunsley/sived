@@ -122,6 +122,9 @@ class Rect:
         return f"Rect({self.x}, {self.y}, {self.end_x}, {self.end_y})[centre ({self.centre_x}, {self.centre_y}) size ({self.size.width}, {self.size.height})]"
 
 
+Rect.unit_rect = Rect.make_with_size(0, 0, Size.unit_size)
+
+
 class TestRect(unittest.TestCase):
     def test_coord_fixing(self):
         r = Rect.make_with_end_coords(1000, 2000, 210, 120)

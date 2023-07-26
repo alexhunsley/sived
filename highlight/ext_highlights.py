@@ -22,6 +22,15 @@ from .size import *
 # centre and right/bottom align isn't working because we're using first image dimension, not all!
 # fixes in other branch, ahead?
 #
+#
+# NEXT:
+#  Make a test video that shows the hexaclip grid. Write hexaclip parser and accept as a clip rects from toml if detected.
+#  Use Size and Rect all over main code, before fixing any more zoomy stuff.
+#
+# Notes:
+#  Will allow tag 'del' to mean that something can be deleted (intro/outro/something uninteresting). Other tags can appear, for info,
+#  but existence of trim will have that effect.
+#
 
 show_seg_number = False
 
