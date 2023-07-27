@@ -1,9 +1,9 @@
 # toml spec helper
 #
 
-import toml
-
+import sys
 from .time import *
+from .hexaclip import *
 
 
 def get_inherited_value(key, segment, video_data, default_value=None):
@@ -47,7 +47,7 @@ def get_watermark_filename(segment, video_data):
     fnames = get_inherited_value('watermark_filename', segment, video_data, None)
 
     # if nothing specified, don't try prepending 'h' to front if it's missing
-    if len(fnames) == 0:
+    if fnames is None or len(fnames) == 0:
         return None
 
     # default to 'h' layout if none provided as first item
@@ -82,8 +82,23 @@ def get_desc(segment, video_data):
     return get_inherited_value('desc', segment, video_data, "desc")
 
 
-def get_clip_rect(segment, video_data):
-    return get_inherited_value('clip_rect', segment, video_data, None)
+def get_clip_rect(segment, video_data, map_rect=None):
+    value = get_inherited_value('clip_rect', segment, video_data, None)
+
+    print(f" get_inher_value for get_clip_rect: {value}")
+
+    # we allow hexaclip strings for clip_rect
+    if isinstance(value, str):
+        if map_rect is None:
+            print("\n\n Error: map_rect not given, but found a hexaclip string for a clip_rect")
+            sys.exit(1)
+
+        clip_rect = Hexaclip.rect(value, map_rect)
+        value = {'x': clip_rect[0], 'y': clip_rect[1], 'end_x': clip_rect[2], 'end_y': clip_rect[3] }
+        print(f"------- Built hexaclip value: {value}")
+
+    return value
+
 
 
 def get_grab_frame(segment):

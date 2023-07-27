@@ -94,8 +94,8 @@ class Rect:
         # we check `not for self.size < other.size` rather than `self.size > other.size`
         # since inequality check on sizes demands that both width and height have the in equality hold
         # (and we need to know if even just one of width or height fails the check).
-        if not self.size < other_rect.size:
-            raise ValueError("Receiver rectangle is larger than the other rectangle.")
+        if self.size > other_rect.size:
+            raise ValueError(f"Receiver rectangle is larger than the other rectangle: {self.size} > {other_rect.size}")
 
         new_x = self.x
         new_y = self.y
@@ -110,7 +110,7 @@ class Rect:
         elif self.end_y > other_rect.end_y:
             new_y -= (self.end_y > other_rect.end_y)
 
-        return Size.make_with_size(new_x, new_y, self.size)
+        return Rect.make_with_size(new_x, new_y, self.size)
 
 
     def map(self, px, py, target_rect):
