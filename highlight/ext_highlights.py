@@ -119,9 +119,12 @@ def add_text(clip, text):
 # use_clip_rect is either the actual seg rect or the union'd rect (for a concat video).
 # segment_clip_rect is always the segment's own clip rect as per toml. (Defaults to input video frame
 # if not specified for a segment.)
-def process_segment(video_path, idx, desc, segment, video_data, use_clip_rect, segment_clip_rect):
+# NEEDS SORTING OUT. max_size?
+def process_segment(video_path, idx, desc, segment, video_data, max_size, segment_clip_rect):
     # filename without extension
     # video_base_filename = os.path.splitext(os.path.basename(video_path))[0]
+
+    print(f"  passed segment clip rect: {segment_clip_rect}")
 
     print(f"   passed video_path = {video_path}")
 
@@ -190,19 +193,42 @@ def process_segment(video_path, idx, desc, segment, video_data, use_clip_rect, s
 
         segment_clip_rect_r = Rect.make_with_end_coords(segment_clip_rect['x'], segment_clip_rect['y'], segment_clip_rect['end_x'], segment_clip_rect['end_y'])
 
-        use_clip_rect_r = Rect.make_with_end_coords(use_clip_rect['x'], use_clip_rect['y'], use_clip_rect['end_x'], use_clip_rect['end_y'])
+        # use_clip_rect_r = Rect.make_with_end_coords(use_clip_rect['x'], use_clip_rect['y'], use_clip_rect['end_x'], use_clip_rect['end_y'])
 
-        # fl = use_clip_rect_r.size.aspect_filled_to(segment_clip_rect_r.size)
-        fl = use_clip_rect_r.size.aspect_fitted_to(segment_clip_rect_r.size)
+        # aspect_fitted_segment_clip_size = segment_clip_rect_r.size
 
-        r = Rect.make_with_centre_and_size(segment_clip_rect_r.centre_x, segment_clip_rect_r.centre_y, fl)
-        r = r.moved_minimally_to_lie_inside(use_clip_rect_r)
+        aspect_fitted_segment_clip_size = max_size.aspect_fitted_to(segment_clip_rect_r.size)
+        aspect_filled_segment_clip_size = max_size.aspect_filled_to(segment_clip_rect_r.size)
+
+        # aspect_fitted_segment_clip_size = segment_clip_rect_r.size.aspect_fitted_to(max_size)
+        # aspect_filled_segment_clip_size = segment_clip_rect_r.size.aspect_filled_to(max_size)
+
+        # aspect_filled_segment_clip_size = segment_clip_rect_r.size.aspect_filled_to(max_size)
+
+        print(f" before, after fit: {segment_clip_rect_r.size} {aspect_fitted_segment_clip_size}  (and max_size = {max_size}")
+        print(f" before, after fill: {segment_clip_rect_r.size} {aspect_filled_segment_clip_size}  (and max_size = {max_size}")
+
+        # fl = use_clip_rect_r.size.aspect_fitted_to(segment_clip_rect_r.size)
+
+        # use_clip_rect = {'x': 0, 'y': 0, 'end_x': max_size.width, 'end_y': max_size.height}
+        # use_clip_rect_r = Rect.make_with_size(0, 0, max_size)
+
+        r = Rect.make_with_centre_and_size(segment_clip_rect_r.centre_x, segment_clip_rect_r.centre_y, aspect_filled_segment_clip_size)
+        # r = Rect.make_with_centre_and_size(segment_clip_rect_r.centre_x, segment_clip_rect_r.centre_y, aspect_fitted_segment_clip_size)
+        video_size_rect = Rect.make_with_size(0, 0, Size.make(clip.size[0], clip.size[1]))
+        # THIS needs to be the size of the input video!
+        r = r.moved_minimally_to_lie_inside(video_size_rect)
+
+        # use this instead of avoid aspect fit:
+        # r = segment_clip_rect_r
 
         # here -- we can see the -24x coord for "0001" hexaclip thing.
         # so move back into source size.
-        print(f" filled: {use_clip_rect_r} fitted to {segment_clip_rect_r} gives asp {fl}, so final r = {r}")
+        # print(f" filled: {use_clip_rect_r} fitted to {segment_clip_rect_r} gives asp {aspect_filled_segment_clip_rect}, so final r = {r}")
 
         # clip = clip.fx(crop, x1=segment_clip_rect['x'], y1=segment_clip_rect['y'], x2=segment_clip_rect['end_x'], y2=segment_clip_rect['end_y'])
+
+        # crop the input video at original input video coordinates
         clip = clip.fx(crop, x1=r.x, y1=r.y, x2=r.end_x, y2=r.end_y)
 
         # if use_clip_rect != segment_clip_rect:
@@ -218,8 +244,6 @@ def process_segment(video_path, idx, desc, segment, video_data, use_clip_rect, s
         clip = clip.resize(clip.size[::-1])
 
     #  {'x': 128, 'y': 128, 'end_x': 896, 'end_y': 640}
-    print(f" clip_rect = {use_clip_rect}")
-    print(f" segment_clip_rect = {segment_clip_rect}")
     # sys.exit(0)
 
     # segment_clip_rect has the x, y we need for clip_offset_in_context
@@ -229,9 +253,10 @@ def process_segment(video_path, idx, desc, segment, video_data, use_clip_rect, s
 
     # clip = apply_watermark(clip, use_clip_rect, segment_clip_rect, segment, video_data)
 
-    if use_clip_rect != segment_clip_rect:
-        print(f" different use_clip_rect and segment_clip_rect, so resizing. : {use_clip_rect} {segment_clip_rect}")
-        #
+    # if use_clip_rect != segment_clip_rect:
+    if max_size != segment_clip_rect_r.size:
+        print(f" different use_clip_rect and segment_clip_rect, so resizing. : {max_size} {segment_clip_rect_r.size}")
+
         # # aspect fit so weird aspects for clips don't munt the output aspect ratio
         #
         # segment_clip_rect_r = Rect.make_with_end_coords(segment_clip_rect['x'], segment_clip_rect['y'], segment_clip_rect['end_x'], segment_clip_rect['end_y'])
@@ -253,14 +278,14 @@ def process_segment(video_path, idx, desc, segment, video_data, use_clip_rect, s
 
         # clip = clip.resize((fl.width, fl.height))
 
-        ww = use_clip_rect['end_x'] - use_clip_rect['x']
-        hh = use_clip_rect['end_y'] - use_clip_rect['y']
-        print(f"Calling clip.resize with {ww}, {hh}")
+        # ww = use_clip_rect['end_x'] - use_clip_rect['x']
+        # hh = use_clip_rect['end_y'] - use_clip_rect['y']
+        # print(f"Calling clip.resize with {ww}, {hh}")
 
         # if ww, hh are not same aspect rect as output video,
         # moviePy appears to scale the clip so that clip ww matches
         # the output vid ww.
-        clip = clip.resize((ww, hh))
+        clip = clip.resize((max_size.width, max_size.height))
 
     # Zoom in over time - the image will zoom in by 5% per second
     # zoom_in_clip = img.fx(lambda t: img.resize(1 + 0.05*t))
@@ -321,6 +346,8 @@ def process_video_toml(toml_file):
 
     global make_concatenation_video
 
+    max_segment_size = Size.zero
+
     if make_concatenation_video:
 
         # print(f"=-=-==-=   in make_concatenation_video bit")
@@ -336,12 +363,20 @@ def process_video_toml(toml_file):
                 max_clip_rect = {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]}
                 break
 
-            print(f"   IN MIN/MAX, befpre comp, clip rect {rect} and max_clip_rect is {max_clip_rect}")
+            print(f"   IN MIN/MAX, before comp, clip rect {rect} and max_clip_rect is {max_clip_rect}; max_segment_size = {max_segment_size}")
 
             max_clip_rect['x'] = min(max_clip_rect['x'], rect['x'])  # x
             max_clip_rect['y'] = min(max_clip_rect['y'], rect['y'])  # y
             max_clip_rect['end_x'] = max(max_clip_rect['end_x'], rect['end_x'])  # end_x
             max_clip_rect['end_y'] = max(max_clip_rect['end_y'], rect['end_y'])  # end_y
+
+            # clip_size = Size.make(max_clip_rect['end_x'] - max_clip_rect['x'],
+            #                       max_clip_rect['end_y'] - max_clip_rect['y'])
+            clip_size = Size.make(rect['end_x'] - rect['x'], rect['end_y'] - rect['y'])
+
+            max_segment_size = max_segment_size.unioned_with(clip_size)
+
+            print(f"New max_segment_size after mixing with {clip_size} = {max_segment_size}")
 
             print(f"   IN MIN/MAX,     after comp, clip rect {rect} and max_clip_rect is {max_clip_rect}")
 
@@ -360,14 +395,19 @@ def process_video_toml(toml_file):
         segment_clip_rect = get_clip_rect(segment, video_data, video_size_rect)
 
         if not segment_clip_rect:
-            segment_clip_rect = {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]}
-                
-        use_clip_rect = max_clip_rect if make_concatenation_video else segment_clip_rect
+            # segment_clip_rect = {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]}
+            segment_clip_rect = {'x': 0, 'y': 0, 'end_x': max_segment_size.width, 'end_y': max_segment_size.height}
 
-        print(f"=-=-==-=      ... use_clip_rect for {idx} = {use_clip_rect}")
+        # use_clip_rect = max_clip_rect if make_concatenation_video else segment_clip_rect
+
+        # use_clip_rect = segment_clip_rect
+
+        # print(f"=-=-==-=      ... use_clip_rect for {idx} = {use_clip_rect}")
 
         desc = get_desc(segment, video_data)
-        output_clip = process_segment(video_path, idx, desc, segment, video_data, use_clip_rect, segment_clip_rect)
+        # output_clip = process_segment(video_path, idx, desc, segment, video_data, use_clip_rect, segment_clip_rect)
+        # what we really need here is the aspect of max size, but pass the max_size for now and deal with inside func
+        output_clip = process_segment(video_path, idx, desc, segment, video_data, max_segment_size, segment_clip_rect)
 
         if make_concatenation_video:
             # Determine fade duration from the TOML data

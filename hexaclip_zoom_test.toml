@@ -1,189 +1,45 @@
 [[video]]
-# video_filename = "output_green.mp4"
-video_filename = "output_blue_larger_res.mp4"
-# watermark_filename = "h=watermark_sample.png=(watermark_sample2.png=(watermark_sample3.png=watermark_sample4.png))=watermark_sample4.png"
-# watermark_filename = "v=((watermark_sample.png=watermark_sample2.png)=(watermark_sample3.png=watermark_sample4.png)=watermark_sample3.png)=watermark_sample2.png"
-# watermark_filename = "h=(watermark_sample.png=watermark_sample3b.png)=(watermark_sample2b.png=(watermark_sample4b.png=watermark_sample3b.png)"
-# watermark_filename = "h=(watermark_sample.png=watermark_sample2b.png)"
-# watermark_filename = "h=watermark_sample.png=watermark_sample2b.png"
-# watermark_filename = "h=(grid1.png=grid2.png)=(grid3.png=(grid4.png=grid1.png=grid2.png))"
-
-# watermark_filename = "H=(grid1.png=grid2.png)=(grid3.png=(grid4.png=grid1.png=grid2.png))"
-# watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
-watermark_filename = "v=grid1.png=(grid2.png=grid3.png)"
+video_filename = "output_blue_larger_res_hexagrid.mp4"
+#watermark_filename = "v=grid1.png=(grid2.png=grid3.png)"
 #clip_rect = { x = 128, y = 128, end_x = 896, end_y = 640 }
-clip_rect = { x = 256, y = 192, end_x = 768, end_y = 576 }
-
-#clip_rect = { x = 400, y = 100, end_x = 624, end_y = 668 }
-#clip_rect = { x = 462, y = 334, end_x = 562, end_y = 434 }
-# path prepending all non-absolute watermark files
-watermark_home = "images"
-
-start_time = "1"
-# if you put 0.2 here, some frames are dropped in the concat video!
-end_time = "1.5"
-
-# watermark_filename = "h=watermark_sample.png=watermark_sample2b.png"
-
-watermark_dimension = 200
-desc = "green test"
-
-# h
-
-[[video.segments]]
-watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [-2, -2]
-
-[[video.segments]]
-watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [0, 0]
-
-[[video.segments]]
-watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [-2, 0]
-
-[[video.segments]]
-watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [-1, 0]
-
-[[video.segments]]
-watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [-1, -2]
-
-[[video.segments]]
-watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [-1, -1]
-
-[[video.segments]]
-watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [-2, -1]
-
-[[video.segments]]
-watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-watermark_position = [0, -1]
-
-[[video.segments]]
-watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-clip_rect = { x = 0, y = 0, end_x = 1024, end_y = 768 }
-watermark_position = [0, -2]
-
-#
-#[[video.segments]]
-#clip_rect = { x = 0, y = 0, end_x = 1024, end_y = 768 }
-## clip_rect = { x = 150, y = 200, end_x = 1024, end_y = 768 }
-#
-#
-#[[video.segments]]
-#clip_rect = { x = 0, y = 0, end_x = 1024, end_y = 768 }
-#watermark_position = [-1, -1]
-#
-#
-## # v (inherited watermark layout mode)
-#
-#[[video.segments]]
-#watermark_position = [-2, -2]
-#
-#[[video.segments]]
-#watermark_position = [0, 0]
-#
-#[[video.segments]]
-#watermark_position = [-2, 0]
-#
-#[[video.segments]]
-#watermark_position = [-1, 0]
-#
-#[[video.segments]]
-#watermark_position = [-1, -2]
-#
-#[[video.segments]]
-#watermark_position = [-1, -1]
-#
-#[[video.segments]]
-#watermark_position = [-2, -1]
-#
-#[[video.segments]]
-#watermark_position = [0, -1]
-#
-#[[video.segments]]
-#watermark_position = [0, -2]
-#
-#
-## H
-#
-#[[video.segments]]
+#watermark_home = "images"
 #watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
 #watermark_position = [-2, -2]
-#
-#[[video.segments]]
-#watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-#watermark_position = [0, 0]
-#
-#[[video.segments]]
-#watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-#watermark_position = [-2, 0]
-#
-#[[video.segments]]
-#watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-#watermark_position = [-1, 0]
-#
-#[[video.segments]]
-#watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-#watermark_position = [-1, -2]
-#
-#[[video.segments]]
-#watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-#watermark_position = [-1, -1]
-#
-#[[video.segments]]
-#watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-#watermark_position = [-2, -1]
-#
-#[[video.segments]]
-#watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-#watermark_position = [0, -1]
-#
-#[[video.segments]]
-#watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-#watermark_position = [0, -2]
-#
-#
-#
-## V
-#
-#[[video.segments]]
-#watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
-#watermark_position = [-2, -2]
-#
-#[[video.segments]]
-#watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
-#watermark_position = [0, 0]
-#
-#[[video.segments]]
-#watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
-#watermark_position = [-2, 0]
-#
-#[[video.segments]]
-#watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
-#watermark_position = [-1, 0]
-#
-#[[video.segments]]
-#watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
-#watermark_position = [-1, -2]
-#
-#[[video.segments]]
-#watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
-#watermark_position = [-1, -1]
-#
-#[[video.segments]]
-#watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
-#watermark_position = [-2, -1]
-#
-#[[video.segments]]
-#watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
-#watermark_position = [0, -1]
-#
-#[[video.segments]]
-#watermark_filename = "V=grid1.png=(grid2.png=grid3.png)"
-#watermark_position = [0, -2]
+#watermark_dimension = 200
+#clip_rect = "11ee"
+#clip_rect = "22dd"
+
+start_time = "0"
+end_time = "2"
+
+desc = "hexagrid zoom test"
+
+[[video.segments]]
+## should be 4x2 blocks tl at (0, 1).
+## and it does generate that, if no union rect forces it to be larger.
+#clip_rect = "0132"
+#clip_rect = "0077"
+
+# 6x4 TL
+clip_rect = "0053"
 
 
+[[video.segments]]
+# breaks things, cos makes a rect outside the video.
+# need to rectify the rect to be inside the image.
+#clip_rect = "0037"
+
+# this fails - because it extends out of top of input video
+#  -- NOW WORKS after minimal move inside etc.
+#clip_rect = "0001"
+#clip_rect = "f0ff"
+
+# 4x4 TR
+clip_rect = "c0f3"
+#clip_rect = "a0f3"
+
+
+#
+#
+#[[video.segments]]
+#clip_rect = "44bb"

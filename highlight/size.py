@@ -27,9 +27,13 @@ class Size:
     def scaled_to(self, other_size, ratio_choose_func, z_min=None, z_max=None):
         width_ratio = other_size.width / self.width
         height_ratio = other_size.height / self.height
+        print(f" ============ ratios for w/h: {width_ratio} {height_ratio}")
         scale_factor = ratio_choose_func(width_ratio, height_ratio)
         scale_factor = Maths.clip(scale_factor, z_min, z_max)
-        return self.scaled(scale_factor)
+        print(f" ============ so chose scale factor: {scale_factor}")
+        new_size = self.scaled(scale_factor)
+        print(f" ============ before, after: {self} {new_size}")
+        return new_size
 
 
     def aspect_fitted_to(self, other_size, z_min=None, z_max=None):
@@ -43,6 +47,21 @@ class Size:
     # A large man tries to walk into a bar but he's too big. So he's half filled, half fitted: he's fillited.
     def aspect_fillited_to(self, other_size, z_min=None, z_max=None):
         return self.scaled_to(other_size, Maths.avg, z_min, z_max)
+
+
+    # returns result of applying a function independently to widths and heights of self and other_size
+    def combined_with(self, other_size, func):
+        return Size.make(func(self.width, other_size.width), func(self.height, other_size.height))
+
+
+    # union aka max
+    def unioned_with(self, other_size):
+        return self.combined_with(other_size, max)
+
+
+    # union aka min
+    def intersected_with(self, other_size):
+        return self.combined_with(other_size, min)
 
 
     def __lt__(self, other):
@@ -69,6 +88,7 @@ class Size:
 
 
 Size.unit_size = Size.make(1, 1)
+Size.zero = Size.make(0, 0)
 
 
 class TestSize(unittest.TestCase):
