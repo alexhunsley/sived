@@ -10,8 +10,11 @@ watermark_position = [0, 0]
 #clip_rect = "11ee"
 #clip_rect = "22dd"
 
-max_pixel_scale = 2
-# can this even be used? does it make sense? not really!
+#max_pixel_scale = 2
+# can this even be used? does it make sense?
+# ah yes, if you make output_video_size < input video size, things are getting
+# pixel scales <1.
+# TODO later.
 #min_pixel_scale = 2
 
 
@@ -19,7 +22,7 @@ start_time = "0"
 end_time = "0.5"
 
 # overrides automatic detection of union largest size as output video size
-output_video_size = [768, 576]
+#output_video_size = [768, 576]
 #output_video_size = [384, 288]
 #output_video_size = [1024, 768]
 # to avoid squish when output_video_size aspect diff from input video,
@@ -31,8 +34,8 @@ desc = "hexagrid zoom test"
 
 
 
-[[video.segments]]
-clip_rect = "00ff"
+#[[video.segments]]
+#clip_rect = "00ff"
 
 #[[video.segments]]
 ### should be 4x2 blocks tl at (0, 1).
@@ -73,85 +76,112 @@ clip_rect = "00ff"
 ##clip_rect = "0e0f"
 
 
-
+# 1x1
 [[video.segments]]
-clip_rect = "0000"
+clip_rect = "0101"
 
+# 2x1
 [[video.segments]]
-clip_rect = "0010"
+clip_rect = "0111"
 
+# 3x1
 [[video.segments]]
-clip_rect = "0020"
+clip_rect = "0121"
 
+# 4x1
 [[video.segments]]
-clip_rect = "0030"
+clip_rect = "0131"
 
+# 4x3
 [[video.segments]]
-clip_rect = "0040"
+clip_rect = "0133"
 
+# 6x3
 [[video.segments]]
-clip_rect = "0050"
+clip_rect = "0153"
 
-[[video.segments]]
-clip_rect = "0060"
-
-[[video.segments]]
-clip_rect = "0070"
-
-[[video.segments]]
-clip_rect = "0080"
-
-[[video.segments]]
-clip_rect = "0090"
-
-[[video.segments]]
-clip_rect = "00b0"
-
-[[video.segments]]
-clip_rect = "00d0"
-
-[[video.segments]]
-clip_rect = "00f0"
-
-
-
-
-
-[[video.segments]]
-clip_rect = "0000"
+#[[video.segments]]
+#clip_rect = "0000"
 #
 #[[video.segments]]
-#clip_rect = "0001"
-
-#[[video.segments]]
-#clip_rect = "0002"
-#
-[[video.segments]]
-clip_rect = "0003"
-
-#[[video.segments]]
-#clip_rect = "0004"
-
-#[[video.segments]]
-#clip_rect = "0005"
+#clip_rect = "0010"
 #
 #[[video.segments]]
-#clip_rect = "0006"
-
-[[video.segments]]
-clip_rect = "0007"
-
-#[[video.segments]]
-#clip_rect = "0009"
-
-[[video.segments]]
-clip_rect = "000a"
-
-#[[video.segments]]
-#clip_rect = "000b"
+#clip_rect = "0020"
 #
 #[[video.segments]]
-#clip_rect = "000d"
+#clip_rect = "0030"
+#
+#[[video.segments]]
+#clip_rect = "0032"
 
-[[video.segments]]
-clip_rect = "000f"
+#
+#[[video.segments]]
+#clip_rect = "0040"
+#
+#[[video.segments]]
+#clip_rect = "0050"
+#
+#[[video.segments]]
+#clip_rect = "0060"
+#
+#[[video.segments]]
+#clip_rect = "0070"
+#
+#[[video.segments]]
+#clip_rect = "0080"
+#
+#[[video.segments]]
+#clip_rect = "0090"
+#
+#[[video.segments]]
+#clip_rect = "00b0"
+#
+#[[video.segments]]
+#clip_rect = "00d0"
+#
+#[[video.segments]]
+#clip_rect = "00f0"
+#
+#
+#
+#
+#
+#[[video.segments]]
+#clip_rect = "0000"
+##
+##[[video.segments]]
+##clip_rect = "0001"
+#
+##[[video.segments]]
+##clip_rect = "0002"
+##
+#[[video.segments]]
+#clip_rect = "0003"
+#
+##[[video.segments]]
+##clip_rect = "0004"
+#
+##[[video.segments]]
+##clip_rect = "0005"
+##
+##[[video.segments]]
+##clip_rect = "0006"
+#
+#[[video.segments]]
+#clip_rect = "0007"
+#
+##[[video.segments]]
+##clip_rect = "0009"
+#
+#[[video.segments]]
+#clip_rect = "000a"
+#
+##[[video.segments]]
+##clip_rect = "000b"
+##
+##[[video.segments]]
+##clip_rect = "000d"
+#
+#[[video.segments]]
+#clip_rect = "000f"

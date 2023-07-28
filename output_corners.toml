@@ -67,6 +67,9 @@ watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
 clip_rect = { x = 0, y = 0, end_x = 1024, end_y = 768 }
 watermark_position = [0, -2]
 
+
+
+
 #
 #[[video.segments]]
 #clip_rect = { x = 0, y = 0, end_x = 1024, end_y = 768 }
