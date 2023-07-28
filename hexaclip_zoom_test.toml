@@ -20,26 +20,111 @@ desc = "hexagrid zoom test"
 #clip_rect = "0132"
 #clip_rect = "0077"
 
+# issues:
+# 0053,0fff
+# 0053, 0d0f (shows just one square for the last!)
+#
+# ok: 0053, 0f0f. 11
+
+# is this fit vs. fill? Or an issue with w ratio < , h ratio > for the fit/fill?
+
 # 6x4 TL
-clip_rect = "0053"
+#clip_rect = "0053"
+clip_rect = "0035"
+
+
+#[[video.segments]]
+## breaks things, cos makes a rect outside the video.
+## need to rectify the rect to be inside the image.
+##clip_rect = "0037"
+#
+## this fails - because it extends out of top of input video
+##  -- NOW WORKS after minimal move inside etc.
+##clip_rect = "0001"
+##clip_rect = "f0ff"
+#
+## 4x4 TR
+##clip_rect = "c0f3"
+##clip_rect = "a0f3"
+#
+## now this breaks after using min, max!
+## 3x16
+#clip_rect = "0f2f"
+##clip_rect = "0e0f"
 
 
 [[video.segments]]
-# breaks things, cos makes a rect outside the video.
-# need to rectify the rect to be inside the image.
-#clip_rect = "0037"
+clip_rect = "0000"
 
-# this fails - because it extends out of top of input video
-#  -- NOW WORKS after minimal move inside etc.
-#clip_rect = "0001"
-#clip_rect = "f0ff"
+[[video.segments]]
+clip_rect = "0010"
 
-# 4x4 TR
-clip_rect = "c0f3"
-#clip_rect = "a0f3"
+[[video.segments]]
+clip_rect = "0020"
+
+[[video.segments]]
+clip_rect = "0030"
+
+[[video.segments]]
+clip_rect = "0040"
+
+[[video.segments]]
+clip_rect = "0050"
+
+[[video.segments]]
+clip_rect = "0060"
+
+[[video.segments]]
+clip_rect = "0070"
+
+[[video.segments]]
+clip_rect = "0090"
+
+[[video.segments]]
+clip_rect = "00b0"
+
+[[video.segments]]
+clip_rect = "00d0"
+
+[[video.segments]]
+clip_rect = "00f0"
 
 
-#
-#
-#[[video.segments]]
-#clip_rect = "44bb"
+
+
+
+[[video.segments]]
+clip_rect = "0000"
+
+[[video.segments]]
+clip_rect = "0001"
+
+[[video.segments]]
+clip_rect = "0002"
+
+[[video.segments]]
+clip_rect = "0003"
+
+[[video.segments]]
+clip_rect = "0004"
+
+[[video.segments]]
+clip_rect = "0005"
+
+[[video.segments]]
+clip_rect = "0006"
+
+[[video.segments]]
+clip_rect = "0007"
+
+[[video.segments]]
+clip_rect = "0009"
+
+[[video.segments]]
+clip_rect = "000b"
+
+[[video.segments]]
+clip_rect = "000d"
+
+[[video.segments]]
+clip_rect = "000f"

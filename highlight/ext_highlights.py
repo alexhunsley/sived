@@ -197,6 +197,8 @@ def process_segment(video_path, idx, desc, segment, video_data, max_size, segmen
 
         # aspect_fitted_segment_clip_size = segment_clip_rect_r.size
 
+        print(f"CHECK IT: max_size {max_size}, clip size: {clip.size} clip asp: {clip.size[0] / clip.size[1]}")
+
         aspect_fitted_segment_clip_size = max_size.aspect_fitted_to(segment_clip_rect_r.size)
         aspect_filled_segment_clip_size = max_size.aspect_filled_to(segment_clip_rect_r.size)
 

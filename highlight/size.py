@@ -23,6 +23,19 @@ class Size:
     def scaled(self, factor):
         return Size.make(self.width * factor, self.height * factor)
 
+    def setting_width_maintaining_aspect(self, width):
+        # x/y = a
+        # x = ya
+        # y = x/a
+        return Size.make(width, width / self.aspect_ratio)
+
+
+    def setting_height_maintaining_aspect(self, height):
+        # x/y = a
+        # x = ya
+        # y = x/a
+        return Size.make(height * self.aspect_ratio, height)
+
 
     def scaled_to(self, other_size, ratio_choose_func, z_min=None, z_max=None):
         width_ratio = other_size.width / self.width
@@ -37,16 +50,30 @@ class Size:
 
 
     def aspect_fitted_to(self, other_size, z_min=None, z_max=None):
-        return self.scaled_to(other_size, Maths.min_ratio, z_min, z_max)
+        # return self.scaled_to(other_size, Maths.min_ratio, z_min, z_max)
+        if self.aspect_ratio > other_size.aspect_ratio:
+            return self.setting_width_maintaining_aspect(other_size.width)
+        else:
+            return self.setting_height_maintaining_aspect(other_size.height)
 
 
     def aspect_filled_to(self, other_size, z_min=None, z_max=None):
-        return self.scaled_to(other_size, Maths.max_ratio, z_min, z_max)
+        # return self.scaled_to(other_size, Maths.min_ratio, z_min, z_max)
+        if self.aspect_ratio < other_size.aspect_ratio:
+            return self.setting_width_maintaining_aspect(other_size.width)
+        else:
+            return self.setting_height_maintaining_aspect(other_size.height)
 
 
-    # A large man tries to walk into a bar but he's too big. So he's half filled, half fitted: he's fillited.
-    def aspect_fillited_to(self, other_size, z_min=None, z_max=None):
-        return self.scaled_to(other_size, Maths.avg, z_min, z_max)
+    # def aspect_filled_to(self, other_size, z_min=None, z_max=None):
+    #     # do we need max_ratio? just ratio?
+    #     # return self.scaled_to(other_size, Maths.max_ratio, z_min, z_max)
+    #     return self.scaled_to(other_size, max, z_min, z_max)
+
+
+    # # A large man tries to walk into a bar but he's too big. So he's half filled, half fitted: he's fillited.
+    # def aspect_fillited_to(self, other_size, z_min=None, z_max=None):
+    #     return self.scaled_to(other_size, Maths.avg, z_min, z_max)
 
 
     # returns result of applying a function independently to widths and heights of self and other_size
