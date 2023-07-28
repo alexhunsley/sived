@@ -31,6 +31,11 @@ from .size import *
 #  Will allow tag 'del' to mean that something can be deleted (intro/outro/something uninteresting). Other tags can appear, for info,
 #  but existence of trim will have that effect.
 #
+#
+# add max_pixel_scale and min_pixel_scale. They default to 'no limit'.
+# 1 is 1-1 pixel size, 2 is blown up 2x, 0.5 is 4 pixels per rendered pixel, etc.
+#
+# Add output video size, which defaults to the union size of all the parts.
 
 show_seg_number = False
 
@@ -354,33 +359,41 @@ def process_video_toml(toml_file):
 
         # print(f"=-=-==-=   in make_concatenation_video bit")
 
-        for idx, segment in enumerate(video_data['segments']):
-            print(f"   union seg rects: seg {idx}")
-            rect = get_clip_rect(segment, video_data, video_size_rect)
+        output_video_size = get_output_video_size(video_data)
 
-            print(f" made rect: {rect}")
+        if output_video_size is not None:
+            max_segment_size = Size.make(output_video_size[0], output_video_size[1])
+        else:
+            for idx, segment in enumerate(video_data['segments']):
+                print(f"   union seg rects: seg {idx}")
+                rect = get_clip_rect(segment, video_data, video_size_rect)
 
-            if not rect:
-                print(f" if not rect - in here")
-                max_clip_rect = {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]}
-                break
+                print(f" made rect: {rect}")
 
-            print(f"   IN MIN/MAX, before comp, clip rect {rect} and max_clip_rect is {max_clip_rect}; max_segment_size = {max_segment_size}")
+                if not rect:
+                    # any segment without a clip rect means we use full output size for it,
+                    # hence use full output size for entire video
+                    print(f" if not rect - in here")
+                    max_segment_size = Size.make(output_video_size[0], output_video_size[1])
+                    break
 
-            max_clip_rect['x'] = min(max_clip_rect['x'], rect['x'])  # x
-            max_clip_rect['y'] = min(max_clip_rect['y'], rect['y'])  # y
-            max_clip_rect['end_x'] = max(max_clip_rect['end_x'], rect['end_x'])  # end_x
-            max_clip_rect['end_y'] = max(max_clip_rect['end_y'], rect['end_y'])  # end_y
+                print(f"   IN MIN/MAX, before comp, clip rect {rect} and max_clip_rect is {max_clip_rect}; max_segment_size = {max_segment_size}")
 
-            # clip_size = Size.make(max_clip_rect['end_x'] - max_clip_rect['x'],
-            #                       max_clip_rect['end_y'] - max_clip_rect['y'])
-            clip_size = Size.make(rect['end_x'] - rect['x'], rect['end_y'] - rect['y'])
+                # max_clip_rect['x'] = min(max_clip_rect['x'], rect['x'])  # x
+                # max_clip_rect['y'] = min(max_clip_rect['y'], rect['y'])  # y
+                # max_clip_rect['end_x'] = max(max_clip_rect['end_x'], rect['end_x'])  # end_x
+                # max_clip_rect['end_y'] = max(max_clip_rect['end_y'], rect['end_y'])  # end_y
 
-            max_segment_size = max_segment_size.unioned_with(clip_size)
+                # clip_size = Size.make(max_clip_rect['end_x'] - max_clip_rect['x'],
+                #                       max_clip_rect['end_y'] - max_clip_rect['y'])
 
-            print(f"New max_segment_size after mixing with {clip_size} = {max_segment_size}")
+                clip_size = Size.make(rect['end_x'] - rect['x'], rect['end_y'] - rect['y'])
 
-            print(f"   IN MIN/MAX,     after comp, clip rect {rect} and max_clip_rect is {max_clip_rect}")
+                max_segment_size = max_segment_size.unioned_with(clip_size)
+
+                print(f"New max_segment_size after mixing with {clip_size} = {max_segment_size}")
+
+                print(f"   IN MIN/MAX,     after comp, clip rect {rect} and max_segment_size is {max_segment_size}")
 
     # we want to calc max clip rect etc before here (so zoom etc work),
     # but now disable flag if only one segment, to avoid a pointless concat file being produced

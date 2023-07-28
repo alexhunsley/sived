@@ -2,17 +2,28 @@
 video_filename = "output_blue_larger_res_hexagrid.mp4"
 #watermark_filename = "v=grid1.png=(grid2.png=grid3.png)"
 #clip_rect = { x = 128, y = 128, end_x = 896, end_y = 640 }
-#watermark_home = "images"
+watermark_home = "images"
+#watermark_filename = "H=grid1.png"
 #watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
-#watermark_position = [-2, -2]
+watermark_position = [0, 0]
 #watermark_dimension = 200
 #clip_rect = "11ee"
 #clip_rect = "22dd"
 
 start_time = "0"
-end_time = "2"
+end_time = "0.5"
+
+# overrides automatic detection of union largest size as output video size
+#output_video_size = [768, 576]
+#output_video_size = [1024, 768]
+output_video_size = [768, 768]
 
 desc = "hexagrid zoom test"
+
+
+
+[[video.segments]]
+clip_rect = "00ff"
 
 [[video.segments]]
 ## should be 4x2 blocks tl at (0, 1).
@@ -51,6 +62,7 @@ clip_rect = "0035"
 ## 3x16
 #clip_rect = "0f2f"
 ##clip_rect = "0e0f"
+
 
 
 [[video.segments]]
@@ -95,36 +107,39 @@ clip_rect = "00f0"
 
 [[video.segments]]
 clip_rect = "0000"
+#
+#[[video.segments]]
+#clip_rect = "0001"
 
-[[video.segments]]
-clip_rect = "0001"
-
-[[video.segments]]
-clip_rect = "0002"
-
+#[[video.segments]]
+#clip_rect = "0002"
+#
 [[video.segments]]
 clip_rect = "0003"
 
-[[video.segments]]
-clip_rect = "0004"
+#[[video.segments]]
+#clip_rect = "0004"
 
-[[video.segments]]
-clip_rect = "0005"
-
-[[video.segments]]
-clip_rect = "0006"
+#[[video.segments]]
+#clip_rect = "0005"
+#
+#[[video.segments]]
+#clip_rect = "0006"
 
 [[video.segments]]
 clip_rect = "0007"
 
-[[video.segments]]
-clip_rect = "0009"
+#[[video.segments]]
+#clip_rect = "0009"
 
 [[video.segments]]
-clip_rect = "000b"
+clip_rect = "000a"
 
-[[video.segments]]
-clip_rect = "000d"
+#[[video.segments]]
+#clip_rect = "000b"
+#
+#[[video.segments]]
+#clip_rect = "000d"
 
 [[video.segments]]
 clip_rect = "000f"
