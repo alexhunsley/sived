@@ -23,18 +23,22 @@ class Size:
     def scaled(self, factor):
         return Size.make(self.width * factor, self.height * factor)
 
-    def setting_width_maintaining_aspect(self, width):
+    # min_width stops excessive pixel scaling (cf max_pixel_scale)
+    def setting_width_maintaining_aspect(self, width, min_width=None):
+        limit_width = width if min_width is None else min(width, min_width)
         # x/y = a
         # x = ya
         # y = x/a
-        return Size.make(width, width / self.aspect_ratio)
+        return Size.make(limit_width, limit_width / self.aspect_ratio)
 
 
-    def setting_height_maintaining_aspect(self, height):
+    def setting_height_maintaining_aspect(self, height, min_height=None):
+        limit_height = height if min_height is None else min(height, min_height)
+
         # x/y = a
         # x = ya
         # y = x/a
-        return Size.make(height * self.aspect_ratio, height)
+        return Size.make(limit_height * self.aspect_ratio, limit_height)
 
 
     def scaled_to(self, other_size, ratio_choose_func, z_min=None, z_max=None):
@@ -57,12 +61,15 @@ class Size:
             return self.setting_height_maintaining_aspect(other_size.height)
 
 
+    # self = max_size, other_size = segment rect
     def aspect_filled_to(self, other_size, z_min=None, z_max=None):
         # return self.scaled_to(other_size, Maths.min_ratio, z_min, z_max)
         if self.aspect_ratio < other_size.aspect_ratio:
-            return self.setting_width_maintaining_aspect(other_size.width)
+            set_width = other_size.width if z_max is None else max(other_size.width, self.width / z_max)
+            return self.setting_width_maintaining_aspect(set_width)
         else:
-            return self.setting_height_maintaining_aspect(other_size.height)
+            set_height = other_size.height if z_max is None else max(other_size.height, self.height / z_max)
+            return self.setting_height_maintaining_aspect(set_height)
 
 
     # def aspect_filled_to(self, other_size, z_min=None, z_max=None):

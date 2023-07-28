@@ -14,6 +14,10 @@ def get_output_video_size(segment, default_value=None):
     return segment.get('output_video_size', default_value)
 
 
+def get_max_pixel_scale(segment, default_value=None):
+    return segment.get('max_pixel_scale', default_value)
+
+
 def get_video_filename(segment, video_data, toml_filename):
 
     video_path = get_inherited_value('video_filename', segment, video_data, None)

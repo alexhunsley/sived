@@ -198,22 +198,27 @@ def process_segment(video_path, idx, desc, segment, video_data, max_size, segmen
 
         segment_clip_rect_r = Rect.make_with_end_coords(segment_clip_rect['x'], segment_clip_rect['y'], segment_clip_rect['end_x'], segment_clip_rect['end_y'])
 
+        max_pixel_scale = get_max_pixel_scale(video_data)
+
+        # how much does this segment to max_size stretch pixels?
+        # pixel_scale =
+
         # use_clip_rect_r = Rect.make_with_end_coords(use_clip_rect['x'], use_clip_rect['y'], use_clip_rect['end_x'], use_clip_rect['end_y'])
 
         # aspect_fitted_segment_clip_size = segment_clip_rect_r.size
 
         print(f"CHECK IT: max_size {max_size}, clip size: {clip.size} clip asp: {clip.size[0] / clip.size[1]}")
 
-        aspect_fitted_segment_clip_size = max_size.aspect_fitted_to(segment_clip_rect_r.size)
-        aspect_filled_segment_clip_size = max_size.aspect_filled_to(segment_clip_rect_r.size)
+        aspect_filled_segment_clip_size = max_size.aspect_filled_to(segment_clip_rect_r.size, z_max=max_pixel_scale)
+        # aspect_fitted_segment_clip_size = max_size.aspect_fitted_to(segment_clip_rect_r.size)
 
         # aspect_fitted_segment_clip_size = segment_clip_rect_r.size.aspect_fitted_to(max_size)
         # aspect_filled_segment_clip_size = segment_clip_rect_r.size.aspect_filled_to(max_size)
 
         # aspect_filled_segment_clip_size = segment_clip_rect_r.size.aspect_filled_to(max_size)
 
-        print(f" before, after fit: {segment_clip_rect_r.size} {aspect_fitted_segment_clip_size}  (and max_size = {max_size}")
         print(f" before, after fill: {segment_clip_rect_r.size} {aspect_filled_segment_clip_size}  (and max_size = {max_size}")
+        # print(f" before, after fit: {segment_clip_rect_r.size} {aspect_fitted_segment_clip_size}  (and max_size = {max_size}")
 
         # fl = use_clip_rect_r.size.aspect_fitted_to(segment_clip_rect_r.size)
 

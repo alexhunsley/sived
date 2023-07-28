@@ -10,13 +10,22 @@ watermark_position = [0, 0]
 #clip_rect = "11ee"
 #clip_rect = "22dd"
 
+max_pixel_scale = 2
+# can this even be used? does it make sense? not really!
+#min_pixel_scale = 2
+
+
 start_time = "0"
 end_time = "0.5"
 
 # overrides automatic detection of union largest size as output video size
-#output_video_size = [768, 576]
+output_video_size = [768, 576]
+#output_video_size = [384, 288]
 #output_video_size = [1024, 768]
-output_video_size = [768, 768]
+# to avoid squish when output_video_size aspect diff from input video,
+# we want to fill our max_output_size into the output_video_size? or similar
+#output_video_size = [512, 768]
+
 
 desc = "hexagrid zoom test"
 
@@ -25,23 +34,23 @@ desc = "hexagrid zoom test"
 [[video.segments]]
 clip_rect = "00ff"
 
-[[video.segments]]
-## should be 4x2 blocks tl at (0, 1).
-## and it does generate that, if no union rect forces it to be larger.
-#clip_rect = "0132"
-#clip_rect = "0077"
-
-# issues:
-# 0053,0fff
-# 0053, 0d0f (shows just one square for the last!)
+#[[video.segments]]
+### should be 4x2 blocks tl at (0, 1).
+### and it does generate that, if no union rect forces it to be larger.
+##clip_rect = "0132"
+##clip_rect = "0077"
 #
-# ok: 0053, 0f0f. 11
-
-# is this fit vs. fill? Or an issue with w ratio < , h ratio > for the fit/fill?
-
-# 6x4 TL
-#clip_rect = "0053"
-clip_rect = "0035"
+## issues:
+## 0053,0fff
+## 0053, 0d0f (shows just one square for the last!)
+##
+## ok: 0053, 0f0f. 11
+#
+## is this fit vs. fill? Or an issue with w ratio < , h ratio > for the fit/fill?
+#
+## 6x4 TL
+##clip_rect = "0053"
+#clip_rect = "0035"
 
 
 #[[video.segments]]
@@ -88,6 +97,9 @@ clip_rect = "0060"
 
 [[video.segments]]
 clip_rect = "0070"
+
+[[video.segments]]
+clip_rect = "0080"
 
 [[video.segments]]
 clip_rect = "0090"
