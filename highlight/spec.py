@@ -10,6 +10,11 @@ def get_inherited_value(key, segment, video_data, default_value=None):
     return segment.get(key, video_data.get(key, default_value))
 
 
+def get_time_mode(video_data, default_value=None):
+    return video_data.get('time_mode', default_value)
+    # return get_inherited_value('time_mode', segment, video_data, None)
+
+
 def get_output_video_size(segment, default_value=None):
     return segment.get('output_video_size', default_value)
 

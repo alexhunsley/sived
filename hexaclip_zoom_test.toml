@@ -1,12 +1,20 @@
 [[video]]
-video_filename = "output_blue_larger_res_hexagrid.mp4"
+# 1 min video, hexagrid
+#video_filename = "output_blue_larger_res_hexagrid.mp4"
+#video_filename = "output_blue_larger_res_hexagrid__5s.mp4"
+
+video_filename = "Sample-MP4-Video-File-for-Testing_15s.mp4"
+
+# 3 sec video
+#video_filename = "output_green.toml__output_green.mp4__seg0000__green test1.mp4"
+
 #watermark_filename = "v=grid1.png=(grid2.png=grid3.png)"
 #clip_rect = { x = 128, y = 128, end_x = 896, end_y = 640 }
 watermark_home = "images"
-#watermark_filename = "H=grid1.png"
+watermark_filename = "H=grid1.png"
 #watermark_filename = "H=grid1.png=(grid2.png=grid3.png)"
 watermark_position = [0, 0]
-#watermark_dimension = 200
+watermark_dimension = 30
 #clip_rect = "11ee"
 #clip_rect = "22dd"
 
@@ -17,9 +25,16 @@ watermark_position = [0, 0]
 # TODO later.
 #min_pixel_scale = 2
 
-
 start_time = "0"
 end_time = "0.5"
+
+# if this is set and not on first segment, we use start_time = end_time for last seg, and for same duration.
+# (Maybe have a 'continue_forver' mode for entire video? It just keeps
+# processing all segments over and over, in continue mode, until end of video is reached,
+# hence entire input video is played, with whatever effects are in the segments. And could have a contiue
+# count instead of forever. whole video done N times.)
+time_mode = "continue"
+
 
 # overrides automatic detection of union largest size as output video size
 #output_video_size = [768, 576]
@@ -32,6 +47,18 @@ end_time = "0.5"
 
 desc = "hexagrid zoom test"
 
+
+
+[[video.segments]]
+
+[[video.segments]]
+clip_rect = "11ee"
+
+[[video.segments]]
+clip_rect = "22dd"
+
+[[video.segments]]
+clip_rect = "33cc"
 
 
 #[[video.segments]]
@@ -76,29 +103,47 @@ desc = "hexagrid zoom test"
 ##clip_rect = "0e0f"
 
 
-# 1x1
-[[video.segments]]
-clip_rect = "0101"
 
-# 2x1
-[[video.segments]]
-clip_rect = "0111"
+## 1x1
+#[[video.segments]]
+#clip_rect = "0101"
 
-# 3x1
-[[video.segments]]
-clip_rect = "0121"
 
-# 4x1
-[[video.segments]]
-clip_rect = "0131"
+## 2x1
+#[[video.segments]]
+#clip_rect = "0111"
+#watermark_position = [-2, 0]
+#
+## 3x1
+#[[video.segments]]
+#clip_rect = "0121"
+#
+## 4x1
+#[[video.segments]]
+#clip_rect = "0131"
+#watermark_position = [-2, 0]
+#
+## 5x1
+#[[video.segments]]
+#clip_rect = "0141"
 
-# 4x3
-[[video.segments]]
-clip_rect = "0133"
+## 6x3
+#[[video.segments]]
+#clip_rect = "0153"
+#watermark_position = [-2, 0]
 
-# 6x3
-[[video.segments]]
-clip_rect = "0153"
+#start_time = "2"
+#end_time = "6"
+
+
+
+
+
+
+
+
+
+
 
 #[[video.segments]]
 #clip_rect = "0000"

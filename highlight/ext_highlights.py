@@ -121,13 +121,20 @@ def add_text(clip, text):
     return CompositeVideoClip([clip, txt_clip])
 
 
+previous_segment_start_time = None
+previous_segment_end_time = None
+
 # use_clip_rect is either the actual seg rect or the union'd rect (for a concat video).
 # segment_clip_rect is always the segment's own clip rect as per toml. (Defaults to input video frame
 # if not specified for a segment.)
-# NEEDS SORTING OUT. max_size?
+# Returns a tuple of (clip, bool). The bool is for 'process more segments'; False means stop and is used for time_mode = 'continue'.
 def process_segment(video_path, idx, desc, segment, video_data, max_size, segment_clip_rect):
     # filename without extension
     # video_base_filename = os.path.splitext(os.path.basename(video_path))[0]
+
+    global previous_segment_start_time, previous_segment_end_time
+
+    force_last_segment = False
 
     print(f"  passed segment clip rect: {segment_clip_rect}")
 
@@ -146,7 +153,7 @@ def process_segment(video_path, idx, desc, segment, video_data, max_size, segmen
             sys.exit("\n\nFound an existing output file and force_overwrite_existing is False, so I can't make a concat video, exiting.\nChange force_overwrite_existing to True if you're ok with that.\n\n")
 
         print(f"File {output_filename} already exists, skipping...")
-        return
+        return None, force_last_segment
 
     video_clip = VideoFileClip(video_path)
 
@@ -172,8 +179,25 @@ def process_segment(video_path, idx, desc, segment, video_data, max_size, segmen
 
         print(f"  -------- clip rotation: {clip.rotation}")
 
-        start_time = get_start_time(segment, video_data)
-        end_time = get_end_time(segment, video_data, f"{clip.duration}")
+        time_mode = get_time_mode(video_data)
+        if time_mode == 'continue' and previous_segment_start_time is not None and previous_segment_end_time is not None:
+            start_time = previous_segment_end_time
+            end_time = start_time + (previous_segment_end_time - previous_segment_start_time)
+
+            print(f" continue mode, last seg: {previous_segment_start_time} {previous_segment_end_time} this seg: {start_time} {end_time}")
+
+            # don't overrun end of video
+            end_time = min(end_time, clip.duration)
+            force_last_segment = (end_time == clip.duration)
+
+            previous_segment_start_time = start_time
+            previous_segment_end_time = end_time
+
+        else:
+            previous_segment_start_time = start_time = get_start_time(segment, video_data)
+            previous_segment_end_time = end_time = get_end_time(segment, video_data, f"{clip.duration}")
+
+        print(f" CMCM start_time, end_time = {start_time}, {end_time}")
 
         # Trim to time interval
         clip = clip.subclip(start_time, end_time)
@@ -311,7 +335,7 @@ def process_segment(video_path, idx, desc, segment, video_data, max_size, segmen
 
     clip.write_videofile(output_filename, threads=use_threads)
 
-    return clip
+    return clip, force_last_segment
 
 
 def process_video_toml(toml_file):
@@ -364,7 +388,10 @@ def process_video_toml(toml_file):
 
         # print(f"=-=-==-=   in make_concatenation_video bit")
 
-        output_video_size = get_output_video_size(video_data)
+        output_video_size = get_output_video_size(video_data, video_size)
+
+        # if not output_video_size:
+        #     output_video_size = video_size
 
         if output_video_size is not None:
             max_segment_size = Size.make(output_video_size[0], output_video_size[1])
@@ -404,53 +431,81 @@ def process_video_toml(toml_file):
     # but now disable flag if only one segment, to avoid a pointless concat file being produced
     make_concatenation_video = make_concatenation_video and len(video_data['segments']) > 1
 
-    for idx, segment in enumerate(video_data['segments']):
-        print(f"=-=-==-=   in segment bit, idx = {idx} segment = {segment}")
+    time_mode = get_time_mode(video_data)
 
-        # guess could cache the vids in memory? not sure what being automatically unloaded, anyhoo
-        # video_path = get_video_filename(segment, video_data)
-        video_path = make_abs_path_rel_to_working_dir(get_video_filename(segment, video_data, toml_file))
+    force_last_segment = False
 
-        # must give the actual video res here, for hexaclip interpreting
-        segment_clip_rect = get_clip_rect(segment, video_data, video_size_rect)
+    # master segment output numner -- increases over all mode segments in continue mode
+    base_idx = 0
 
-        if not segment_clip_rect:
-            # segment_clip_rect = {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]}
-            segment_clip_rect = {'x': 0, 'y': 0, 'end_x': max_segment_size.width, 'end_y': max_segment_size.height}
+    while True:
+        for seg_idx, segment in enumerate(video_data['segments']):
 
-        # use_clip_rect = max_clip_rect if make_concatenation_video else segment_clip_rect
+            idx = base_idx + seg_idx
 
-        # use_clip_rect = segment_clip_rect
+            print(f"=-=-==-=   in segment bit, idx = {idx} segment = {segment}")
 
-        # print(f"=-=-==-=      ... use_clip_rect for {idx} = {use_clip_rect}")
+            # guess could cache the vids in memory? not sure what being automatically unloaded, anyhoo
+            # video_path = get_video_filename(segment, video_data)
+            video_path = make_abs_path_rel_to_working_dir(get_video_filename(segment, video_data, toml_file))
 
-        desc = get_desc(segment, video_data)
-        # output_clip = process_segment(video_path, idx, desc, segment, video_data, use_clip_rect, segment_clip_rect)
-        # what we really need here is the aspect of max size, but pass the max_size for now and deal with inside func
-        output_clip = process_segment(video_path, idx, desc, segment, video_data, max_segment_size, segment_clip_rect)
+            # must give the actual video res here, for hexaclip interpreting
+            segment_clip_rect = get_clip_rect(segment, video_data, video_size_rect)
 
-        if make_concatenation_video:
-            # Determine fade duration from the TOML data
-            # (Default to -1 second i.e. disabled if not specified)
-            fade_duration = get_fade_duration(segment, video_data)
-            fade_mode = get_fade_mode(segment, video_data)
-            print(f"  =--=-==-=-= fade_mode = {fade_mode} fade_duration = {fade_duration} ")
+            if not segment_clip_rect:
+                # segment_clip_rect = {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]}
+                segment_clip_rect = {'x': 0, 'y': 0, 'end_x': max_segment_size.width, 'end_y': max_segment_size.height}
 
-            if fade_duration > 0 and fade_mode:
-                print(f" ... so applying crossfade in and out")
+            # use_clip_rect = max_clip_rect if make_concatenation_video else segment_clip_rect
 
-                # Apply fade in/out/both to clip
-                if fade_mode == "both" or fade_mode == "in": 
-                    output_clip = output_clip.fx(fadein, fade_duration)
+            # use_clip_rect = segment_clip_rect
 
-                if fade_mode == "both" or fade_mode == "out":
-                    output_clip = output_clip.fx(fadeout, fade_duration)
+            # print(f"=-=-==-=      ... use_clip_rect for {idx} = {use_clip_rect}")
 
-                # output_clip = output_clip.crossfadein(fade_duration).crossfadeout(fade_duration)
+            desc = get_desc(segment, video_data)
+            # output_clip = process_segment(video_path, idx, desc, segment, video_data, use_clip_rect, segment_clip_rect)
+            # what we really need here is the aspect of max size, but pass the max_size for now and deal with inside func
+            (output_clip, force_last_segment) = process_segment(video_path, idx, desc, segment, video_data, max_segment_size, segment_clip_rect)
 
-            reel_loop_count = segment.get('reel_loop_count', 1)
-            for i in range(0, reel_loop_count):
-                concat_clips.append(output_clip)
+            if make_concatenation_video:
+                # Determine fade duration from the TOML data
+                # (Default to -1 second i.e. disabled if not specified)
+                fade_duration = get_fade_duration(segment, video_data)
+                fade_mode = get_fade_mode(segment, video_data)
+                print(f"  =--=-==-=-= fade_mode = {fade_mode} fade_duration = {fade_duration} ")
+
+                if fade_duration > 0 and fade_mode:
+                    print(f" ... so applying crossfade in and out")
+
+                    # Apply fade in/out/both to clip
+                    if fade_mode == "both" or fade_mode == "in":
+                        output_clip = output_clip.fx(fadein, fade_duration)
+
+                    if fade_mode == "both" or fade_mode == "out":
+                        output_clip = output_clip.fx(fadeout, fade_duration)
+
+                    # output_clip = output_clip.crossfadein(fade_duration).crossfadeout(fade_duration)
+
+                reel_loop_count = segment.get('reel_loop_count', 1)
+                for i in range(0, reel_loop_count):
+                    concat_clips.append(output_clip)
+
+            if force_last_segment:
+                # we've reach end of input video (for time_mode = 'continue')
+                break
+
+
+        # if make_concatenation_video:
+        #     final_clip = concatenate_videoclips(concat_clips)
+        #     final_output_filename = f"{os.path.splitext(video_path)[0]}__concat.mp4"
+        #     final_clip.write_videofile(final_output_filename, threads=use_threads)
+
+        print(f" CMCM break out from while True? time_mode = {time_mode}, force_last_segment = {force_last_segment}")
+        # repeat all segments processing?
+        if time_mode != 'continue' or force_last_segment:
+            break
+
+        base_idx += len(video_data['segments'])
 
     if make_concatenation_video:
         final_clip = concatenate_videoclips(concat_clips)
