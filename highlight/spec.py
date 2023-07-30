@@ -101,20 +101,23 @@ def get_desc(segment, video_data):
 
 
 def get_clip_rect(segment, video_data, map_rect=None):
-    value = get_inherited_value('clip_rect', segment, video_data, None)
+    clip_rect = get_inherited_value('clip_rect', segment, video_data, None)
 
-    print(f" get_inher_value for get_clip_rect: {value}")
+    print(f" get_inher_value for get_clip_rect: {clip_rect}")
 
     # we allow hexaclip strings for clip_rect
-    if isinstance(value, str):
+    if isinstance(clip_rect, str):
         if map_rect is None:
             print("\n\n Error: map_rect not given, but found a hexaclip string for a clip_rect")
             sys.exit(1)
 
-        clip_rect = Hexaclip.rect(value, map_rect)
-        value = {'x': clip_rect[0], 'y': clip_rect[1], 'end_x': clip_rect[2], 'end_y': clip_rect[3] }
-        print(f"------- Built hexaclip value: {value}")
+        clip_rect = Hexaclip.rect(clip_rect, map_rect)
+        print(f"------- Built hexaclip value: {clip_rect}")
 
+    if clip_rect is None:
+        return None
+
+    value = Rect.make_with_end_coords(clip_rect[0], clip_rect[1], clip_rect[2], clip_rect[3])
     return value
 
 
