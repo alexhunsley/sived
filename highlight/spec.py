@@ -128,4 +128,15 @@ def get_text(segment):
 
 
 def get_segment_loop_count(segment, video_data):
-    return get_inherited_value('segment_loop_count', segment, video_data, None)
+    # a loop count of 1 means just play it once, no loop
+    return get_inherited_value('segment_loop_count', segment, video_data, 1)
+
+
+def get_x_scale(segment, video_data):
+    # local scaling per-segment of the source clip_rect
+    return get_inherited_value('x_scale', segment, video_data, "1")
+
+
+def get_y_scale(segment, video_data):
+    # local scaling per-segment of the source clip_rect
+    return get_inherited_value('y_scale', segment, video_data, "1")

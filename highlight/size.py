@@ -20,6 +20,10 @@ class Size:
         return cls(width, height)
 
 
+    def scaled_ind(self, x_factor, y_factor):
+        return Size.make(self.width * x_factor, self.height * y_factor)
+
+
     def scaled(self, factor):
         return Size.make(self.width * factor, self.height * factor)
 

@@ -255,6 +255,20 @@ def process_segment(video_path, idx, desc, segment, video_data, max_size, segmen
         print(f"CHECK IT: max_size {max_size}, clip size: {clip.size} clip asp: {clip.size[0] / clip.size[1]}")
 
         aspect_filled_segment_clip_size = max_size.aspect_filled_to(segment_clip_rect_r.size, z_max=max_pixel_scale)
+
+
+
+        x_scale = float(get_x_scale(segment, video_data))
+        y_scale = float(get_y_scale(segment, video_data))
+
+        print(f" scale x, y: {x_scale} {y_scale}")
+
+        if x_scale != 1 or y_scale != 1:
+
+            aspect_filled_segment_clip_size = aspect_filled_segment_clip_size.scaled_ind(x_scale, y_scale)
+
+
+
         # aspect_fitted_segment_clip_size = max_size.aspect_fitted_to(segment_clip_rect_r.size)
 
         # aspect_fitted_segment_clip_size = segment_clip_rect_r.size.aspect_fitted_to(max_size)
