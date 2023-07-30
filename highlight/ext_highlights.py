@@ -397,9 +397,10 @@ def process_video_toml(toml_file):
 
     # does this load lots of data into memory up front? I'm guessing not.
     video_clip = VideoFileClip(video_path)
-    video_size = video_clip.size
+    video_size = Size.make(video_clip.size[0], video_clip.size[1])
 
-    video_size_rect = Rect.make_with_end_coords(0, 0, video_size[0], video_size[1])
+
+    video_size_rect = Rect.make_with_size(0, 0, video_size)
 
     print(f"\n\n======= Processing video: {os.path.basename(video_path)}  got size = {video_size} =======\n")
 
@@ -411,7 +412,8 @@ def process_video_toml(toml_file):
 
     # value which anything can be trumped when unioning. Note origin and size other way round! deliberate.
     # max_clip_rect = {'x': video_size[0], 'y': video_size[1], 'end_x': 0, 'end_y': 0} if make_concatenation_video else  {'x': 0, 'y': 0, 'end_x': video_size[0], 'end_y': video_size[1]}
-    max_clip_rect = {'x': video_size[0], 'y': video_size[1], 'end_x': 0, 'end_y': 0}
+
+    max_clip_rect = Rect.make_with_size(video_size_rect.size.width, video_size_rect.size.height, Size.zero)
 
     # print(f"=-=-==-=   max_clip_rect = {max_clip_rect}")
 
@@ -429,7 +431,8 @@ def process_video_toml(toml_file):
         #     output_video_size = video_size
 
         if output_video_size is not None:
-            max_segment_size = Size.make(output_video_size[0], output_video_size[1])
+            max_segment_size = output_video_size
+                #Size.make(output_video_size[0], output_video_size[1])
         else:
             for idx, segment in enumerate(video_data['segments']):
                 print(f"   union seg rects: seg {idx}")

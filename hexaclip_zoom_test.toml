@@ -30,7 +30,7 @@ end_time = "0.5"
 
 # if this is set and we're not on the first segment, we use start_time = end_time for last seg, and same duration.
 # can use per segment, or for entire video by declaring in [[video]] section.
-time_mode = "continue"
+#time_mode = "continue"
 
 # overrides automatic detection of union largest size as output video size
 #output_video_size = [768, 576]

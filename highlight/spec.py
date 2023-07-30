@@ -16,7 +16,12 @@ def get_time_mode(video_data, default_value=None):
 
 
 def get_output_video_size(segment, default_value=None):
-    return segment.get('output_video_size', default_value)
+    seg_size_tuple = segment.get('output_video_size')
+
+    if seg_size_tuple is None:
+        return default_value
+
+    return Size.make(seg_size_tuple[0], seg_size_tuple[1])
 
 
 def get_max_pixel_scale(segment, default_value=None):
