@@ -173,6 +173,27 @@ def process_segment(video_path, idx, desc, segment, video_data, max_size, segmen
         # use 1 if no zoom? otherwise 30
         clip.fps = 30
 
+    elif text := get_text(segment):
+        text, duration = text.split('|')
+        duration = float(duration)
+
+        #SparklyFontRegular-zyA3.ttf
+        txt_clip = TextClip(text, fontsize=80, color='white', font='/Users/alexhunsley/Library/Fonts/SparklyFontRegular-zyA3.ttf', align='center', size=video_clip.size)
+
+        # You can also specify the font, e.g.
+        # txt_clip = TextClip("Your text here", fontsize=24, color='white', font='Arial', align='center', size=moviesize)
+
+        # Optionally, to make it multi-line, you can include a new line character (\n)
+        # txt_clip = TextClip("Line 1\nLine 2", fontsize=24, color='white', font='Arial', align='center', size=moviesize)
+
+        segment_clip_rect_r = Rect.make_with_end_coords(0, 0, video_clip.size[0], video_clip.size[1])
+
+        # To match the duration of the original video
+        txt_clip = txt_clip.set_duration(duration)
+        txt_clip.fps = 1
+
+        clip = txt_clip
+
     else:
         clip = video_clip
         # clip = VideoFileClip(video_path)
@@ -486,8 +507,9 @@ def process_video_toml(toml_file):
 
                     # output_clip = output_clip.crossfadein(fade_duration).crossfadeout(fade_duration)
 
-                reel_loop_count = segment.get('reel_loop_count', 1)
-                for i in range(0, reel_loop_count):
+                segment_loop_count = get_segment_loop_count(segment, video_data)
+
+                for i in range(0, segment_loop_count):
                     concat_clips.append(output_clip)
 
             if force_last_segment:

@@ -122,3 +122,10 @@ def get_grab_frame(segment):
 
     return grab_frame
 
+
+def get_text(segment):
+    return segment.get('text')
+
+
+def get_segment_loop_count(segment, video_data):
+    return get_inherited_value('segment_loop_count', segment, video_data, None)

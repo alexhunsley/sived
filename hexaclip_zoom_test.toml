@@ -28,13 +28,9 @@ watermark_dimension = 30
 start_time = "0"
 end_time = "0.5"
 
-# if this is set and not on first segment, we use start_time = end_time for last seg, and for same duration.
-# (Maybe have a 'continue_forver' mode for entire video? It just keeps
-# processing all segments over and over, in continue mode, until end of video is reached,
-# hence entire input video is played, with whatever effects are in the segments. And could have a contiue
-# count instead of forever. whole video done N times.)
+# if this is set and we're not on the first segment, we use start_time = end_time for last seg, and same duration.
+# can use per segment, or for entire video by declaring in [[video]] section.
 time_mode = "continue"
-
 
 # overrides automatic detection of union largest size as output video size
 #output_video_size = [768, 576]
@@ -46,7 +42,6 @@ time_mode = "continue"
 
 
 desc = "hexagrid zoom test"
-
 
 
 [[video.segments]]
