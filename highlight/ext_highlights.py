@@ -29,6 +29,10 @@ from .size import *
 #
 # Allow crop numbers to start '-' to mean from right or bottom. -0 means rhs or bottom (the visible pixel, not one off image edge).
 #
+# Make script output an ffmpeg concat file and then just run ffmpeg, instead of moviepy which is tediously slow.
+#
+# Allow text on top of clips (currenty we do a title card)
+#
 # Notes:
 #  Will allow tag 'del' to mean that something can be deleted (intro/outro/something uninteresting). Other tags can appear, for info,
 #  but existence of trim will have that effect.
@@ -71,8 +75,12 @@ use_threads = 8
 
 toml_base_filename = None
 
-# make_concatenation_video = True
-make_concatenation_video = False
+make_concatenation_video = True
+# make_concatenation_video = False
+
+# comment out to use input video framerate
+# override_fps = 1
+
 
 force_overwrite_existing = True
 
@@ -334,6 +342,10 @@ def process_segment(video_path, idx, desc, segment, video_data, max_size, segmen
         seg_text = f"seg {idx}"
         clip = add_text(clip, seg_text)
 
+    # if fps := override_fps:
+    if 'override_fps' in globals():
+        clip.fps = override_fps
+
     clip.write_videofile(output_filename, threads=use_threads)
 
     return clip, force_last_segment
@@ -391,12 +403,15 @@ def process_video_toml(toml_file):
 
     # print(f"=-=-==-=   in make_concatenation_video bit")
 
-    output_video_size = get_output_video_size(video_data, video_size)
+    # why using video_size here? means if 'output_video_size' not set in video,
+    # we keep the full video size, we dont want that?!
+    # output_video_size = get_output_video_size(video_data, video_size)
+    output_video_size = get_output_video_size(video_data, None)
 
     # if not output_video_size:
     #     output_video_size = video_size
 
-    # we now do this bit even when not making concat ideos,
+    # we now do this bit even when not making concat videos,
     # which means that even without concat videos each clip will
     # scaled up to the output video size. May want a diff flag
     # to stop that behaviour for non-concat generation (i.e. so
@@ -408,18 +423,19 @@ def process_video_toml(toml_file):
     else:
         for idx, segment in enumerate(video_data['segments']):
             print(f"   union seg rects: seg {idx}")
-            rect = get_clip_rect(segment, video_data, video_size_rect)
+            rect_r = get_clip_rect(segment, video_data, video_size_rect)
 
-            print(f" made rect: {rect}")
-
-            if not rect:
+            if not rect_r:
                 # any segment without a clip rect means we use full output size for it,
                 # hence use full output size for entire video
                 print(f" if not rect - in here")
                 max_segment_size = Size.make(output_video_size[0], output_video_size[1])
                 break
 
-            print(f"   IN MIN/MAX, before comp, clip rect {rect} and max_clip_rect is {max_clip_rect}; max_segment_size = {max_segment_size}")
+            # rect_r = Rect.make_with_end_coords(rect[0], rect[1], rect[2], rect[3])
+            print(f" made rect_r: {rect_r}")
+
+            print(f"   IN MIN/MAX, before comp, clip rect {rect_r} and max_clip_rect is {max_clip_rect}; max_segment_size = {max_segment_size}")
 
             # max_clip_rect['x'] = min(max_clip_rect['x'], rect['x'])  # x
             # max_clip_rect['y'] = min(max_clip_rect['y'], rect['y'])  # y
@@ -429,13 +445,13 @@ def process_video_toml(toml_file):
             # clip_size = Size.make(max_clip_rect['end_x'] - max_clip_rect['x'],
             #                       max_clip_rect['end_y'] - max_clip_rect['y'])
 
-            clip_size = Size.make(rect['end_x'] - rect['x'], rect['end_y'] - rect['y'])
+            # clip_size = Size.make(rect['end_x'] - rect['x'], rect['end_y'] - rect['y'])
 
-            max_segment_size = max_segment_size.unioned_with(clip_size)
+            max_segment_size = max_segment_size.unioned_with(rect_r.size)
 
-            print(f"New max_segment_size after mixing with {clip_size} = {max_segment_size}")
+            print(f"New max_segment_size after mixing with {rect_r.size} = {max_segment_size}")
 
-            print(f"   IN MIN/MAX,     after comp, clip rect {rect} and max_segment_size is {max_segment_size}")
+            print(f"   IN MIN/MAX,     after comp, clip rect {rect_r} and max_segment_size is {max_segment_size}")
 
     # we want to calc max clip rect etc before here (so zoom etc work),
     # but now disable flag if only one segment, to avoid a pointless concat file being produced
