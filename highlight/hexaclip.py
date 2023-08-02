@@ -7,8 +7,9 @@ from .rect import *
 
 
 def hex_to_tuple(hex_string):
-    # if len(hex_string) != 4:
-    #     raise ValueError('Input should be a four character hexadecimal string')
+    if len(hex_string) != 4:
+        raise ValueError('Input should be a four character hexadecimal string')
+
     return tuple(int(c, 16) / 16.0 for c in hex_string)
 
 
@@ -20,9 +21,6 @@ class Hexaclip:
         map_rect = Rect.unit_rect if map_rect is None else map_rect
         print(f"Made map_rect: {map_rect}")
 
-        # x_div = map_rect.size.width / 16.0
-        # y_div = map_rect.size.height / 16.0
-
         hex_tuple = hex_to_tuple(hex_str)
         print(f"hex_tuple: {hex_tuple}")
 
@@ -30,7 +28,6 @@ class Hexaclip:
 
         print(f" mapped_point = {mapped_point}")
         return mapped_point
-        # map_rect.map()
 
 
     @classmethod
@@ -43,19 +40,11 @@ class Hexaclip:
         map_rect = Rect.unit_rect if map_rect is None else map_rect
         print(f"Made map_rect: {map_rect}")
 
-        x_div = map_rect.size.width / 16.0
-        y_div = map_rect.size.height / 16.0
-
-        # hex_tuple = hex_to_tuple(hex_str)
-
-        # print(f"hex_tuple: {hex_tuple}")
-
         (xx0, yy0) = Rect.unit_rect.map(x0, y0, map_rect)
         (xx1, yy1) = Rect.unit_rect.map(x1, y1, map_rect)
 
         print(f" mapped_point = {xx0}, {yy0}, {xx1}, {yy1}")
         return (xx0, yy0, xx1, yy1)
-        # map_rect.map()
 
 
 class TestHexaclip(unittest.TestCase):
@@ -64,7 +53,6 @@ class TestHexaclip(unittest.TestCase):
         self.assertEqual(Hexaclip.coords("08"), (0.0, 0.5))
         self.assertEqual(Hexaclip.coords("0f"), (0.0, 0.9375))
         self.assertEqual(Hexaclip.coords("ff"), (0.9375, 0.9375))
-        # self.assertEqual(Hexaclip.coords("ff08"), (1.0, 1.0, 0.0, 0.5))
 
 
     def test_bottom_right_coord(self):
