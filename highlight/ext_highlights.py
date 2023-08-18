@@ -320,7 +320,9 @@ def process_video_toml(toml_file):
                 # any segment without a clip rect means we use full output size for it,
                 # hence use full output size for entire video
                 print(f" if not rect - in here")
-                max_segment_size = Size.make(output_video_size[0], output_video_size[1])
+                # we know that output_video_size is None if we got here!
+                # max_segment_size = Size.make(output_video_size[0], output_video_size[1])
+                max_segment_size = video_size_rect.size
                 break
 
             print(f" made rect_r: {rect_r}")
@@ -334,6 +336,8 @@ def process_video_toml(toml_file):
     # we want to calc max clip rect etc before here (so zoom etc work),
     # but now disable flag if only one segment, to avoid a pointless concat file being produced
     make_concatenation_video = make_concatenation_video and len(video_data['segments']) > 1
+
+    print(f"============ make_concatenation_video: {make_concatenation_video}")
 
     time_mode = get_time_mode(video_data)
 
