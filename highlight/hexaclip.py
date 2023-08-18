@@ -7,8 +7,8 @@ from .rect import *
 
 
 def hex_to_tuple(hex_string):
-    if len(hex_string) != 4:
-        raise ValueError('Input should be a four character hexadecimal string')
+    if len(hex_string) != 4 and len(hex_string) != 2:
+        raise ValueError(f'hex_to_tuple: Input should be a two or four character hexadecimal string: found |{hex_string}|, len={len(hex_string)}')
 
     return tuple(int(c, 16) / 16.0 for c in hex_string)
 
@@ -19,7 +19,7 @@ class Hexaclip:
     def coords(cls, hex_str, map_rect=None, x_offset=0, y_offset=0):
         # pass
         map_rect = Rect.unit_rect if map_rect is None else map_rect
-        print(f"Made map_rect: {map_rect}")
+        print(f"Made map_rect: {map_rect}, got hex_tuple = |{hex_str}|")
 
         hex_tuple = hex_to_tuple(hex_str)
         print(f"hex_tuple: {hex_tuple}")
