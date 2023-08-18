@@ -109,6 +109,7 @@ class Rect:
             new_y = other_rect.y
         elif self.end_y > other_rect.end_y:
             new_y -= (self.end_y > other_rect.end_y)
+            new_y -= (self.end_y - other_rect.end_y)
 
         return Rect.make_with_size(new_x, new_y, self.size)
 

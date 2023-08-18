@@ -124,7 +124,7 @@ from .image import *
 
 
 def add_text(clip, text):
-    txt_clip = TextClip(text, fontsize = 60, color = 'red') 
+    txt_clip = TextClip(text, fontsize=60, color='red')
     txt_clip = txt_clip.set_pos('left').set_duration(clip.duration) 
 
     # Overlay the text clip on the first video clip 
@@ -141,6 +141,7 @@ previous_segment_end_time = None
 def process_segment(video_path, idx, desc, segment, video_data, max_size, segment_clip_rect):
     global previous_segment_start_time, previous_segment_end_time
 
+    print(f"...........apap - process_segment -- max_size = {max_size} segment_clip_rect = {segment_clip_rect}")
     force_last_segment = False
 
     print(f"  passed segment clip rect: {segment_clip_rect}")
@@ -223,6 +224,8 @@ def process_segment(video_path, idx, desc, segment, video_data, max_size, segmen
 
         aspect_filled_segment_clip_size = max_size.aspect_filled_to(segment_clip_rect_r.size, z_max=max_pixel_scale)
 
+        print(f"...........apap - process_segment -- aspect_filled_segment_clip_size = {aspect_filled_segment_clip_size}")
+
         x_scale = float(get_x_scale(segment, video_data))
         y_scale = float(get_y_scale(segment, video_data))
 
@@ -234,8 +237,12 @@ def process_segment(video_path, idx, desc, segment, video_data, max_size, segmen
         print(f" before, after fill: {segment_clip_rect_r.size} {aspect_filled_segment_clip_size}  (and max_size = {max_size}")
 
         r = Rect.make_with_centre_and_size(segment_clip_rect_r.centre_x, segment_clip_rect_r.centre_y, aspect_filled_segment_clip_size)
+        print(f"...........apap - before move: got r = {r}")
+
         video_size_rect = Rect.make_with_size(0, 0, Size.make(clip.size[0], clip.size[1]))
         r = r.moved_minimally_to_lie_inside(video_size_rect)
+        print(f"...........apap - after move into {video_size_rect}: got r = {r}")
+
 
         clip = clip.fx(crop, x1=r.x, y1=r.y, x2=r.end_x, y2=r.end_y)
 
@@ -286,8 +293,8 @@ def process_video_toml(toml_file):
     video_clip = VideoFileClip(video_path)
     video_size = Size.make(video_clip.size[0], video_clip.size[1])
 
-
     video_size_rect = Rect.make_with_size(0, 0, video_size)
+    print(f"...........apap video_size_rect: {video_size_rect}")
 
     print(f"\n\n======= Processing video: {os.path.basename(video_path)}  got size = {video_size} =======\n")
 
@@ -314,15 +321,18 @@ def process_video_toml(toml_file):
     else:
         for idx, segment in enumerate(video_data['segments']):
             print(f"   union seg rects: seg {idx}")
+            # 3rd param below is map_rect! not a default.
             rect_r = get_clip_rect(segment, video_data, video_size_rect)
 
             if not rect_r:
+                # error("shouldn't be here!")
+                # sys.exit(1)
                 # any segment without a clip rect means we use full output size for it,
                 # hence use full output size for entire video
-                print(f" if not rect - in here")
                 # we know that output_video_size is None if we got here!
                 # max_segment_size = Size.make(output_video_size[0], output_video_size[1])
-                max_segment_size = video_size_rect.size
+                max_segment_size = video_size
+                print(f"...........apap - no rect_r found, using video_size_rect")
                 break
 
             print(f" made rect_r: {rect_r}")
@@ -363,6 +373,8 @@ def process_video_toml(toml_file):
                 segment_clip_rect = Rect.make_with_size(0, 0, Size.make(max_segment_size.width, max_segment_size.height))
 
             desc = get_desc(segment, video_data)
+
+
             (output_clip, force_last_segment) = process_segment(video_path, idx, desc, segment, video_data, max_segment_size, segment_clip_rect)
 
             if make_concatenation_video:
